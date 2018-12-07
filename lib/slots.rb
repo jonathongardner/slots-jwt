@@ -1,0 +1,25 @@
+# frozen_string_literal: true
+
+require "slots/engine"
+require "slots/database_authentication"
+require "slots/generic_methods"
+require "slots/configuration"
+
+module Slots
+  # Your code goes here...
+  module Model
+    def slots(*extensions)
+      to_include = [GenericMethods]
+      @_slots_extensions = []
+      if extensions.include?(:database_authentication)
+        to_include.push(DatabaseAuthentication)
+        @_slots_extensions.push(:database_authentication)
+      end
+
+      slots_extensions_not_found = extensions - @_slots_extensions
+      raise "The following slot extensions were not found: #{slots_extensions_not_found}" if slots_extensions_not_found.present?
+      include *to_include
+    end
+  end
+  ActiveRecord::Base.extend Slots::Model
+end

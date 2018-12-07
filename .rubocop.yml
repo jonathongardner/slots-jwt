@@ -1,0 +1,9 @@
+AllCops:
+  TargetRubyVersion: 2.3.2
+inherit_gem:
+  rubocop-rails_config:
+    - config/rails.yml
+Style/StringLiterals:
+  Enabled: false
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: no_space
