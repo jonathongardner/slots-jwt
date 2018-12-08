@@ -3,13 +3,14 @@
 require "slots/engine"
 require "slots/database_authentication"
 require "slots/generic_methods"
+require "slots/generic_validations"
 require "slots/configuration"
 
 module Slots
   # Your code goes here...
   module Model
     def slots(*extensions)
-      to_include = [GenericMethods]
+      to_include = [GenericMethods, GenericValidations]
       @_slots_extensions = []
       if extensions.include?(:database_authentication)
         to_include.push(DatabaseAuthentication)

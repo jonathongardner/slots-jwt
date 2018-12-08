@@ -14,10 +14,10 @@ module Slots
         @logins = {value => //}
       elsif value.is_a?(Hash)
         # Should do most inclusive regex last
-        raise 'must be hash of symbols => regex' unless value.length > 0 && value.all? { |k, v| k.is_a?(Symbol) && v.is_a?(Regexp)}
+        raise 'must be hash of symbols => regex' unless value.length > 0 && value.all? { |k, v| k.is_a?(Symbol) && v.is_a?(Regexp) }
         @logins = value
       else
-        raise 'must be an symbol or hash'
+        raise 'must be a symbol or hash'
       end
     end
   end

@@ -7,4 +7,4 @@
 
 some_great_db_auth_user:
   email: 'SomeEmail@somewhere.com'
-  password_digest: <%= BCrypt::Password.create('password') %>
+  password_digest: <%= BCrypt::Password.create(DbAuthUser.pass) %>
