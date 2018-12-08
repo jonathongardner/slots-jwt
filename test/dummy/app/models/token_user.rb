@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class TokenUser < ApplicationRecord
-  slots :database_authentication
+  slots :tokens
 
   def authenticate(password)
     password == self.class.pass ? self : false

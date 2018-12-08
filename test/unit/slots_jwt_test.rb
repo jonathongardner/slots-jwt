@@ -16,10 +16,18 @@ class SlotsJwtTest < Slots::Test
   end
   test "should encode valid token" do
     id = 'SomeIdentifier'
+    jws = Slots::Slokens.encode(id)
+    assert_decode_token jws.token, identifier: id, exp: jws.exp, iat: jws.iat
+  end
+  test "should encode using config secret" do
+    new_secret = 'my0ther$ecr3t'
+    Slots.configure do |config|
+      config.secret = (new_secret)
+    end
+    id = 'SomeIdentifier'
 
     jws = Slots::Slokens.encode(id)
-
-    assert_decode_token jws.token, identifier: id, exp: jws.exp, iat: jws.iat
+    assert_decode_token jws.token, identifier: id, exp: jws.exp, iat: jws.iat, secret: new_secret
   end
   test "should raise error for invalid token" do
     id = 'SomeIdentifier'
@@ -46,28 +54,6 @@ class SlotsJwtTest < Slots::Test
     end
     error_raised_with_messege(JWT::VerificationError, "Signature verification raised") do
       Slots::Slokens.decode(create_token('my0ther$ecr3t', identifier: id, exp: 2.minute.from_now.to_i, iat: 2.minute.ago.to_i))
-    end
-  end
-
-
-  def create_token(secret = 'my$ecr3t', **payload)
-    JWT.encode payload, secret, 'HS256'
-  end
-  def assert_decode_token(token, secret: 'my$ecr3t', identifier: nil, exp: nil, iat: nil)
-    begin
-      payload_array = JWT.decode token, secret, true, verify_iat: true, algorithm: 'HS256'
-      payload = payload_array[0]
-      assert_equal identifier, payload['identifier'], 'Identifer should be equal to encoded identifier' if identifier
-      assert_equal exp, payload['exp'], 'exp should be equal to encoded exp' if exp
-      assert_equal iat, payload['iat'], 'iat should be equal to encoded iat' if iat
-    rescue JWT::ExpiredSignature
-      assert false, 'Token should not be expired'
-    rescue JWT::InvalidIatError
-      assert false, 'Token should not have invalid iat'
-    rescue JWT::VerificationError
-      assert false, 'Token should not have verification error'
-    rescue JWT::DecodeError
-      assert false, 'Token should not have decoding error'
     end
   end
 end

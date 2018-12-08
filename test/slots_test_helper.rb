@@ -32,4 +32,26 @@ module SlotsTestHelper
   def assert_number_of_errors(num, record)
     assert_equal num, record.errors.messages.length, "Should have #{num} error messages"
   end
+
+
+  def create_token(secret = 'my$ecr3t', **payload)
+    JWT.encode payload, secret, 'HS256'
+  end
+  def assert_decode_token(token, secret: 'my$ecr3t', identifier: nil, exp: nil, iat: nil)
+    begin
+      payload_array = JWT.decode token, secret, true, verify_iat: true, algorithm: 'HS256'
+      payload = payload_array[0]
+      assert_equal identifier, payload['identifier'], 'Identifer should be equal to encoded identifier' if identifier
+      assert_equal exp, payload['exp'], 'exp should be equal to encoded exp' if exp
+      assert_equal iat, payload['iat'], 'iat should be equal to encoded iat' if iat
+    rescue JWT::ExpiredSignature
+      assert false, 'Token should not be expired'
+    rescue JWT::InvalidIatError
+      assert false, 'Token should not have invalid iat'
+    rescue JWT::VerificationError
+      assert false, 'Token should not have verification error'
+    rescue JWT::DecodeError
+      assert false, 'Token should not have decoding error'
+    end
+  end
 end

@@ -1,6 +1,7 @@
-require 'test_helper'
+# frozen_string_literal: true
 
-class UserTest < ActiveSupport::TestCase
+require 'slots_test'
+class UserTest < Slots::Test
   # test "the truth" do
   #   assert true
   # end
