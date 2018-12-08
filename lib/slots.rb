@@ -5,6 +5,7 @@ require "slots/database_authentication"
 require "slots/generic_methods"
 require "slots/generic_validations"
 require "slots/configuration"
+require "slots/exceptions"
 
 module Slots
   # Your code goes here...

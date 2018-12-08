@@ -4,9 +4,11 @@ module Slots
   class Configuration
     attr_accessor :login_regex_validations
     attr_reader :logins
+    attr_writer :authentication_model
     def initialize
       @logins = {email: //}
       @login_regex_validations = true
+      @authentication_model = 'User'
     end
 
     def logins=(value)
@@ -19,6 +21,10 @@ module Slots
       else
         raise 'must be a symbol or hash'
       end
+    end
+
+    def authentication_model
+      @authentication_model.to_s.constantize
     end
   end
 
