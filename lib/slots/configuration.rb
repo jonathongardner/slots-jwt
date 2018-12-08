@@ -2,13 +2,15 @@
 
 module Slots
   class Configuration
-    attr_accessor :login_regex_validations
+    attr_accessor :login_regex_validations, :token_lifetime
     attr_reader :logins
     attr_writer :authentication_model
     def initialize
       @logins = {email: //}
       @login_regex_validations = true
       @authentication_model = 'User'
+      @secret_keys = [{created_at: 0, secret: ENV['SLOT_SECRET']}]
+      @token_lifetime = 1.hour
     end
 
     def logins=(value)
@@ -25,6 +27,17 @@ module Slots
 
     def authentication_model
       @authentication_model.to_s.constantize
+    end
+
+    def secret=(v)
+      @secret_keys = [{created_at: 0, secret: v}]
+    end
+
+    def secret(at = Time.now.to_i)
+      @secret_keys.each do |secret_hash|
+        return secret_hash[:secret] if at > secret_hash[:created_at]
+      end
+      nil
     end
   end
 

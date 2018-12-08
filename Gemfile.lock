@@ -3,6 +3,7 @@ PATH
   specs:
     slots (0.1.0)
       bcrypt (~> 3.1.7)
+      jwt
       rails (~> 5.0)
 
 GEM
@@ -62,6 +63,7 @@ GEM
     i18n (1.1.1)
       concurrent-ruby (~> 1.0)
     jaro_winkler (1.5.1)
+    jwt (2.1.0)
     loofah (2.2.3)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)

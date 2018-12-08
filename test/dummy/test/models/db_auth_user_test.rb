@@ -1,5 +1,6 @@
-require 'slots_test'
+# frozen_string_literal: true
 
+require 'slots_test'
 class DbAuthUserTest < Slots::Test
   test "should not create db auth user without password" do
     new_user = DbAuthUser.new(email: 'coolBeans@test.com')

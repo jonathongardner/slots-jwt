@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_12_08_141124) do
+ActiveRecord::Schema.define(version: 2018_12_08_180205) do
 
   create_table "db_auth_users", force: :cascade do |t|
     t.string "email"
@@ -27,6 +27,12 @@ ActiveRecord::Schema.define(version: 2018_12_08_141124) do
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_generic_users_on_email"
     t.index ["username"], name: "index_generic_users_on_username"
+  end
+
+  create_table "token_users", force: :cascade do |t|
+    t.string "email"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "users", force: :cascade do |t|
