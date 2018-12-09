@@ -1,5 +1,5 @@
 require 'slots_test_helper'
 
-class Slots::Test < ActiveSupport::TestCase
+class SlotsTest < ActiveSupport::TestCase
   include SlotsTestHelper
 end

@@ -8,6 +8,8 @@ module Slots
   end
   class InvalidSecret < StandardError
   end
+  class InvalidToken < StandardError
+  end
   class Slokens
     attr_reader :token, :identifier, :exp, :iat
     def initialize(token: nil, identifier: nil)

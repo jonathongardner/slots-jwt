@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'slots_test'
-class DbAuthUserTest < Slots::Test
+class DbAuthUserTest < SlotsTest
   test "should not create db auth user without password" do
     new_user = DbAuthUser.new(email: 'coolBeans@test.com')
     assert_not new_user.save, 'Saved new user with incorrect info'

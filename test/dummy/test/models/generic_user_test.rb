@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'slots_test'
-class GenericUserTest < Slots::Test
+class GenericUserTest < SlotsTest
   test "should find user for authentication" do
     user = generic_users(:some_great_generic_user)
     assert_equal user, GenericUser.find_for_authentication(user.email), 'Should find_for_authentication user with correct email'

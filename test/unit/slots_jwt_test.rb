@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'slots_test'
-class SlotsJwtTest < Slots::Test
+class SlotsJwtTest < SlotsTest
   test "should decode valid token" do
     id = 'SomeIdentifier'
     exp = 1.minute.from_now.to_i

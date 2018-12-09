@@ -7,6 +7,7 @@ require "slots/generic_validations"
 require "slots/configuration"
 require "slots/extra_classes"
 require "slots/tokens"
+require "slots/tests"
 
 module Slots
   # Your code goes here...

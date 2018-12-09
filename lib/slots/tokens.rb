@@ -31,7 +31,9 @@ module Tokens
 
   module ClassMethods
     def valid_token_and_user?(token)
-      slots_jwt = valid_token?(token)
+      valid_user?(valid_token?(token))
+    end
+    def valid_user?(slots_jwt)
       return nil unless slots_jwt
       user = self.find_by(jwt_identifier_column => slots_jwt.identifier)
       user&.valid_token!(slots_jwt)

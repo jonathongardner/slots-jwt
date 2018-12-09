@@ -1,5 +1,5 @@
 require 'slots_test_helper'
 
-class SlotsIntegration::Test < ActionDispatch::IntegrationTest
+class SlotsIntegrationTest < ActionDispatch::IntegrationTest
   include SlotsTestHelper
 end

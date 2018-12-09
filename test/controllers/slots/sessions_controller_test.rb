@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require 'slots_integration_test.rb'
 module Slots
-  class SessionsControllerTest < ActionDispatch::IntegrationTest
-    include Engine.routes.url_helpers
+  class SessionsControllerTest < SlotsIntegrationTest
+    include Engine.routes.url_helpers, Slots::Tests
 
     test "should sign_in with valid password" do
       user = users(:some_great_user)
@@ -33,12 +33,39 @@ module Slots
     end
 
     test "should not sign_in with invalid login" do
-      user = users(:some_great_user)
       get sign_in_url params: {login: 'DoesntExist@somewher.com', password: User.pass + '_something_else'}
       assert_response :unauthorized
 
       assert_response_error 'authentication', 'login or password is invalid'
     end
+
+    test "should not return user for missing token" do
+      get valid_token_url
+      assert_response :unauthorized
+      assert_response_error 'authentication', 'invalid or missing token'
+    end
+    test "should not return user for invalid token" do
+      get valid_token_url, headers: token_header('foo')
+      assert_response :unauthorized
+      assert_response_error 'authentication', 'invalid or missing token'
+    end
+    test "should not return user for expired token" do
+      user = users(:some_great_user)
+      get valid_token_url, headers: token_header(create_token(identifier: user.email, exp: 1.minute.ago.to_i, iat: 2.minute.ago.to_i))
+      assert_response :unauthorized
+      assert_response_error 'authentication', 'invalid or missing token'
+    end
+    test "should return user for valid token" do
+      user = users(:some_great_user)
+      authorized_get user, valid_token_url
+      assert_response :accepted
+    end
+
+    # test "should not return user for expired token" do
+    #   get valid_token_url, headers: {'authorization' => 'Bearer token="foo"'}
+    #   assert_response :unauthorized
+    #   assert_response_error 'authentication', 'invalid or missing token'
+    # end
 
     # test "should get sign_out" do
     #   get sessions_sign_out_url

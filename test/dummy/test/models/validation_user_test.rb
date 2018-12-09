@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'slots_test'
-class ValidationUserTest < Slots::Test
+class ValidationUserTest < SlotsTest
   test "should not create generic user without logins present" do
     new_user = ValidationUser.new
     assert_not new_user.save, 'saved new user without login'

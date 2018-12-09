@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'slots_test'
-class TokenUserTest < Slots::Test
+class TokenUserTest < SlotsTest
   test "should validate valid token" do
     user = token_users(:some_great_token_user)
     token = create_token(identifier: user.jwt_identifier, exp: 1.minute.from_now.to_i, iat: 1.minute.ago.to_i)
