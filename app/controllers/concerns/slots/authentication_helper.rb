@@ -5,6 +5,7 @@ module Slots
     extend ActiveSupport::Concern
 
     included do
+      include ActionController::HttpAuthentication::Token::ControllerMethods
     end
 
     def current_user
@@ -22,7 +23,7 @@ module Slots
       raise Slots::InvalidToken, 'Missing token' unless jw_token
     end
     def require_valid_user
-      raise Slots::InvalidToken, 'Missing token' unless jw_token
+      raise Slots::InvalidToken, 'Missing user' unless current_user
     end
 
     module ClassMethods
