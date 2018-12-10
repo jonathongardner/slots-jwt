@@ -12,7 +12,8 @@ module Slots
 
       raise Slots::AuthenticationFailed unless current_user&.authenticate?(params[:password])
 
-      render json: current_user, status: :accepted
+      current_user.create_token
+      render json: current_user.as_json(methods: :token), status: :accepted
     end
 
     # def sign_out
@@ -20,7 +21,7 @@ module Slots
     #
 
     def valid_token
-      render json: current_user, status: :accepted
+      render json: current_user.as_json(methods: :token), status: :accepted
     end
 
     rescue_from Slots::AuthenticationFailed do |exception|

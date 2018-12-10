@@ -37,16 +37,16 @@ class TokenUserTest < SlotsTest
 
   test "should return created token" do
     user = token_users(:some_great_token_user)
-    assert_nil user.current_token, 'Should not return token because not created or validated with one'
+    assert_nil user.token, 'Should not return token because not created or validated with one'
     token = user.create_token
-    assert_equal token, user.current_token, 'Should return created token'
+    assert_equal token, user.token, 'Should return created token'
   end
 
   test "should return updated token" do
     user = token_users(:some_great_token_user)
     token = create_token(identifier: user.jwt_identifier, exp: 1.minute.from_now.to_i, iat: 1.minute.ago.to_i)
-    assert_nil user.current_token, 'Should not return token because not created or validated with one'
+    assert_nil user.token, 'Should not return token because not created or validated with one'
     validated_user = TokenUser.valid_token_and_user?(token)
-    assert_equal token, validated_user.current_token, 'Should return created token'
+    assert_equal token, validated_user.token, 'Should return created token'
   end
 end

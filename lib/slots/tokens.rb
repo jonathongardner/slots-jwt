@@ -12,10 +12,10 @@ module Tokens
 
   def create_token
     @slots_jwt = Slots::Slokens.encode(jwt_identifier)
-    current_token
+    token
   end
 
-  def current_token
+  def token
     @slots_jwt&.token
   end
 

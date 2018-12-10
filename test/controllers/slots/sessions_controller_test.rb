@@ -9,19 +9,22 @@ module Slots
       user = users(:some_great_user)
       get sign_in_url params: {login: user.email, password: User.pass}
       assert_response :accepted
+      assert_decode_token(parsed_response['token'], identifier: user.email)
     end
 
     test "should sign_in with valid password and different logins" do
       Slots.configure do |config|
-        config.logins = {email: /@/, username: //} # Most inclusive should be last
+        config.logins = {username: /\A[A-Za-z0-9_\-]+\Z/, email: //} # Most inclusive should be last
       end
       user = users(:some_great_user)
 
       get sign_in_url params: {login: user.email, password: User.pass}
       assert_response :accepted
+      assert_decode_token(parsed_response['token'], identifier: user.username)
 
       get sign_in_url params: {login: user.username, password: User.pass}
       assert_response :accepted
+      assert_decode_token(parsed_response['token'], identifier: user.username)
     end
 
     test "should not sign_in with invalid password" do
@@ -59,6 +62,7 @@ module Slots
       user = users(:some_great_user)
       authorized_get user, valid_token_url
       assert_response :accepted
+      assert_equal current_token, parsed_response['token'], 'Should return token passed'
     end
 
     # test "should get sign_out" do

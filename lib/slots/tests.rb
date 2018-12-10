@@ -3,19 +3,28 @@
 module Slots
   module Tests
     def authorized_get(current_user, url, params: {}, headers: {})
-      get url, params: params, headers: headers.merge(token_header(current_user.create_token))
+      authorized_protocal :get, current_user, url, params: params, headers: headers
     end
     def authorized_post(current_user, url, params: {}, headers: {})
-      post url, params: params, headers: headers.merge(token_header(current_user.create_token))
+      authorized_protocal :post, current_user, url, params: params, headers: headers
     end
     def authorized_patch(current_user, url, params: {}, headers: {})
-      patch url, params: params, headers: headers.merge(token_header(current_user.create_token))
+      authorized_protocal :patch, current_user, url, params: params, headers: headers
     end
     def authorized_put(current_user, url, params: {}, headers: {})
-      put url, params: params, headers: headers.merge(token_header(current_user.create_token))
+      authorized_protocal :put, current_user, url, params: params, headers: headers
     end
     def authorized_delete(current_user, url, params: {}, headers: {})
-      delete url, params: params, headers: headers.merge(token_header(current_user.create_token))
+      authorized_protocal :delete, current_user, url, params: params, headers: headers
+    end
+
+    def authorized_protocal(type, current_user, url, params: {}, headers: {})
+      @token = current_user.create_token
+      send(type, url, params: params, headers: headers.merge(token_header(@token)))
+    end
+
+    def current_token
+      @token
     end
 
     def token_header(token)
