@@ -5,7 +5,7 @@ module Slots
   class SessionsController < ApplicationController
     include AuthenticationHelper
 
-    require_login! except: [:sign_in]
+    require_login! except: [:sign_in, :valid_token]
 
     def sign_in
       @_current_user = _authentication_model.find_for_authentication(params[:login])
@@ -21,6 +21,10 @@ module Slots
     #
 
     def valid_token
+      @_jw_token = authenticate_with_http_token do |token, options|
+        Slots.configuration.authentication_model.valid_token_or_session?(token)
+      end
+      require_valid_token
       render json: current_user.as_json(methods: :token), status: :accepted
     end
 

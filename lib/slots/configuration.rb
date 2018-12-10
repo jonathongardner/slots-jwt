@@ -2,7 +2,7 @@
 
 module Slots
   class Configuration
-    attr_accessor :login_regex_validations, :token_lifetime
+    attr_accessor :login_regex_validations, :token_lifetime, :session_lifetime
     attr_reader :logins
     attr_writer :authentication_model
     def initialize
@@ -11,6 +11,7 @@ module Slots
       @authentication_model = 'User'
       @secret_keys = [{created_at: 0, secret: ENV['SLOT_SECRET']}]
       @token_lifetime = 1.hour
+      @session_lifetime = 2.weeks # Set to nil if you dont want sessions
     end
 
     def logins=(value)

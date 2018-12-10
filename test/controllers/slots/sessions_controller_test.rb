@@ -73,6 +73,17 @@ module Slots
       assert_response :accepted
       assert_equal current_token, parsed_response['token'], 'Should return token passed'
     end
+    test "should return user for expired token with valid session" do
+      user = users(:some_great_user)
+      session = slots_sessions(:a_great_session)
+      token = create_token(identifier: user.jwt_identifier, exp: 1.minute.ago.to_i, iat: session.jwt_iat, session: session.session)
+      get valid_token_url, headers: token_header(token)
+      assert_response :accepted
+
+      assert parsed_response['token'], 'Should return a token'
+      assert current_token != parsed_response['token'], 'Should return a new token'
+      assert_decode_token parsed_response['token'], identifier: user.email, extra_payload: {'session' => session.session}
+    end
 
     # test "should get sign_out" do
     #   get sessions_sign_out_url

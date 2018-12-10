@@ -3,11 +3,11 @@
 a_great_session:
   session: ThisIsMySession
   jwt_iat: <%= 2.minutes.ago.to_i %>
-  user_id: 374342526 # some_great_user
+  user: some_great_user
 
 an_expired_session:
   session: ThisIsMyExpiredSession
   jwt_iat: <%= 3.weeks.ago.to_i %>
-  user_id: 374342526 # some_great_user
+  user: some_great_user
   updated_at: <%= 3.weeks.ago %>
   created_at: <%= 4.weeks.ago %>

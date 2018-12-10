@@ -10,6 +10,19 @@ module Slots
     def update_random_session
       self.session = SecureRandom.hex(32)
     end
+
+    def self.expired
+      self.where(self.arel_table[:created_at].lte(Slots.configuration.session_lifetime.ago))
+    end
+
+    def self.not_expired
+      self.where(self.arel_table[:created_at].gt(Slots.configuration.session_lifetime.ago))
+    end
+
+    def self.matches_jwt(sloken_jws)
+      self.not_expired
+        .find_by(session: sloken_jws.session, jwt_iat: sloken_jws.iat)
+    end
     private
       def create_random_session
         update_random_session unless self.session

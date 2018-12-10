@@ -14,15 +14,15 @@ module Slots
     attr_reader :token, :identifier, :exp, :iat, :extra_payload
     def initialize(token: nil, identifier: nil, extra_payload: extra_payload)
       if token
-        decode(token)
-        @valid = true
+        before_decode(token)
       else
+        @identifier = identifier
         @extra_payload = extra_payload.as_json
-        encode(identifier)
+        encode
         @valid = true
       end
     end
-    def self.decode(token)
+    def self.to_decode(token)
       self.new(token: token)
     end
     def self.encode(identifier, extra_payload)
@@ -33,6 +33,14 @@ module Slots
       @valid
     end
 
+    def update_token
+      encode
+    end
+
+    def session
+      @extra_payload['session']
+    end
+
     def payload
       @extra_payload.merge(
         'identifier' => @identifier,
@@ -41,22 +49,25 @@ module Slots
       )
     end
 
+    def decode
+      JWT.decode @token, secret, true, verify_iat: true, algorithm: 'HS256'
+      @valid = true
+    end
+
     private
       def secret
         @secret ||= Slots.configuration.secret(@iat)
       end
-      def encode(identifier)
-        @identifier = identifier
+      def encode
         @exp = Slots.configuration.token_lifetime.from_now.to_i
         @iat = Time.now.to_i
         raise InvalidSecret if secret.nil?
         @token = JWT.encode self.payload, secret, 'HS256'
       end
-      def decode(token)
+      def before_decode(token)
         @token = token
         set_payload
         raise InvalidSecret if secret.nil?
-        JWT.decode @token, secret, true, verify_iat: true, algorithm: 'HS256'
       end
 
       def set_payload
