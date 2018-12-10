@@ -10,9 +10,24 @@ module Tokens
     send(self.class.jwt_identifier_column)
   end
 
-  def create_token
-    @slots_jwt = Slots::Slokens.encode(jwt_identifier)
+  def create_token(session)
+    options = {**extra_payload}
+    if session
+      @new_session = self.sessions.new(jwt_iat: 0)
+      # Session should never be invalid since its all programmed
+      raise 'Session not valid' unless @new_session.valid?
+      options.update(session: @new_session.session)
+    end
+    @slots_jwt = Slots::Slokens.encode(jwt_identifier, options)
+    if session
+      @new_session.jwt_iat = @slots_jwt.iat
+      @new_session.save!
+    end
     token
+  end
+
+  def extra_payload
+    @extra_payload || {}
   end
 
   def token

@@ -12,6 +12,15 @@ module Slots
       assert_decode_token(parsed_response['token'], identifier: user.email)
     end
 
+    test "should sign_in with valid password and create session" do
+      user = users(:some_great_user)
+      assert_difference('Slots::Session.count') do
+        get sign_in_url params: {login: user.email, password: User.pass, session: true}
+        assert_response :accepted
+        assert_decode_token(parsed_response['token'], identifier: user.email)
+      end
+    end
+
     test "should sign_in with valid password and different logins" do
       Slots.configure do |config|
         config.logins = {username: /\A[A-Za-z0-9_\-]+\Z/, email: //} # Most inclusive should be last

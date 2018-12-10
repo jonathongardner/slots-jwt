@@ -16,8 +16,9 @@ class SlotsJwtTest < SlotsTest
   end
   test "should encode valid token" do
     id = 'SomeIdentifier'
-    jws = Slots::Slokens.encode(id)
-    assert_decode_token jws.token, identifier: id, exp: jws.exp, iat: jws.iat
+    extra_payload = {'something_else' => 47}
+    jws = Slots::Slokens.encode(id, extra_payload)
+    assert_decode_token jws.token, identifier: id, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload
   end
   test "should encode using config secret" do
     new_secret = 'my0ther$ecr3t'
@@ -25,9 +26,10 @@ class SlotsJwtTest < SlotsTest
       config.secret = (new_secret)
     end
     id = 'SomeIdentifier'
+    extra_payload = {'something_else' => 47}
 
-    jws = Slots::Slokens.encode(id)
-    assert_decode_token jws.token, identifier: id, exp: jws.exp, iat: jws.iat, secret: new_secret
+    jws = Slots::Slokens.encode(id, extra_payload)
+    assert_decode_token jws.token, identifier: id, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload, secret: new_secret
   end
   test "should raise error for invalid token" do
     id = 'SomeIdentifier'

@@ -18,8 +18,8 @@ module Slots
       authorized_protocal :delete, current_user, url, params: params, headers: headers
     end
 
-    def authorized_protocal(type, current_user, url, params: {}, headers: {})
-      @token = current_user.create_token
+    def authorized_protocal(type, current_user, url, params: {}, headers: {}, session: false)
+      @token = current_user.create_token(session)
       send(type, url, params: params, headers: headers.merge(token_header(@token)))
     end
 

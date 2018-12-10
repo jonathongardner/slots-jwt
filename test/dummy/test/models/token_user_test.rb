@@ -22,7 +22,9 @@ class TokenUserTest < SlotsTest
     user = token_users(:some_great_token_user)
     assert_equal TokenUser.jwt_identifier_column, :email, 'JWT identifier column should be first identifier in login'
     assert_equal user.email, user.jwt_identifier, 'JWT identifier should be value of first identifier in login'
-    assert_decode_token user.create_token, identifier: user.email
+    assert_no_difference('Slots::Session.count') do
+      assert_decode_token user.create_token(false), identifier: user.email
+    end
   end
 
   test "should create valid token with first identifier from login" do
@@ -32,13 +34,13 @@ class TokenUserTest < SlotsTest
     user = token_users(:some_great_token_user)
     assert_equal TokenUser.jwt_identifier_column, :username, 'JWT identifier column should be first identifier in login'
     assert_equal user.username, user.jwt_identifier, 'JWT identifier should be value of first identifier in login'
-    assert_decode_token user.create_token, identifier: user.username
+    assert_decode_token user.create_token(false), identifier: user.username
   end
 
   test "should return created token" do
     user = token_users(:some_great_token_user)
     assert_nil user.token, 'Should not return token because not created or validated with one'
-    token = user.create_token
+    token = user.create_token(false)
     assert_equal token, user.token, 'Should return created token'
   end
 

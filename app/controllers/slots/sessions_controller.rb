@@ -12,7 +12,7 @@ module Slots
 
       raise Slots::AuthenticationFailed unless current_user&.authenticate?(params[:password])
 
-      current_user.create_token
+      current_user.create_token(ActiveModel::Type::Boolean.new.cast(params[:session]))
       render json: current_user.as_json(methods: :token), status: :accepted
     end
 

@@ -38,13 +38,14 @@ module SlotsTestHelper
   def create_token(secret = 'my$ecr3t', **payload)
     JWT.encode payload, secret, 'HS256'
   end
-  def assert_decode_token(token, secret: 'my$ecr3t', identifier: nil, exp: nil, iat: nil)
+  def assert_decode_token(token, secret: 'my$ecr3t', identifier: nil, exp: nil, iat: nil, extra_payload: nil)
     begin
       payload_array = JWT.decode token, secret, true, verify_iat: true, algorithm: 'HS256'
       payload = payload_array[0]
       assert_equal identifier, payload['identifier'], 'Identifer should be equal to encoded identifier' if identifier
       assert_equal exp, payload['exp'], 'exp should be equal to encoded exp' if exp
       assert_equal iat, payload['iat'], 'iat should be equal to encoded iat' if iat
+      assert_equal extra_payload, payload.except('identifier', 'exp', 'iat'), 'extra_payload should be equal to encoded extra_payload' if extra_payload
     rescue JWT::ExpiredSignature
       assert false, 'Token should not be expired'
     rescue JWT::InvalidIatError
