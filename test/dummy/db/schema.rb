@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_12_08_180205) do
+ActiveRecord::Schema.define(version: 2018_12_10_142023) do
 
   create_table "db_auth_users", force: :cascade do |t|
     t.string "email"
@@ -27,6 +27,16 @@ ActiveRecord::Schema.define(version: 2018_12_08_180205) do
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_generic_users_on_email"
     t.index ["username"], name: "index_generic_users_on_username"
+  end
+
+  create_table "slots_sessions", force: :cascade do |t|
+    t.string "session"
+    t.bigint "jwt_iat"
+    t.bigint "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["session"], name: "index_slots_sessions_on_session", unique: true
+    t.index ["user_id"], name: "index_slots_sessions_on_user_id"
   end
 
   create_table "token_users", force: :cascade do |t|
