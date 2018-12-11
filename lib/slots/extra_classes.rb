@@ -12,8 +12,9 @@ module Slots
   end
   class Slokens
     attr_reader :token, :identifier, :exp, :iat, :extra_payload
-    def initialize(token: nil, identifier: nil, extra_payload: extra_payload)
+    def initialize(token: nil, expected_keys: [], identifier: nil, extra_payload: extra_payload)
       if token
+        @expected_keys = default_expected_keys + expected_keys
         before_decode(token)
       else
         @identifier = identifier
@@ -22,8 +23,8 @@ module Slots
         @valid = true
       end
     end
-    def self.to_decode(token)
-      self.new(token: token)
+    def self.to_decode(token, *expected_keys)
+      self.new(token: token, expected_keys: expected_keys)
     end
     def self.encode(identifier, extra_payload)
       self.new(identifier: identifier, extra_payload: extra_payload)
@@ -55,6 +56,9 @@ module Slots
     end
 
     private
+      def default_expected_keys
+        ['identifier', 'exp', 'iat']
+      end
       def secret
         @secret ||= Slots.configuration.secret(@iat)
       end
@@ -79,14 +83,13 @@ module Slots
           @identifier = local_payload['identifier']
           @exp = local_payload['exp']&.to_i
           @iat = local_payload['iat']&.to_i
-          @extra_payload = local_payload.except('identifier', 'exp', 'iat')
+          @extra_payload = local_payload.except(*default_expected_keys)
         rescue JSON::ParserError => e
           raise JWT::DecodeError, 'Invalid Payload'
         end
         # return invalid if exp isnt passed (this should only happen if the secret key is compromised...
         # which at that point you have other problems...)
-        l = 3
-        raise InvalidPayload, 'Payload is missing objects' unless payload.slice('identifier', 'exp', 'iat').compact.length == l
+        raise InvalidPayload, 'Payload is missing objects' unless payload.slice(*@expected_keys).compact.length == @expected_keys.length
       end
   end
 end

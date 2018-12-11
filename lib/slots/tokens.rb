@@ -4,6 +4,7 @@ module Tokens
   extend ActiveSupport::Concern
 
   included do
+    @extra_expected_keys = []
   end
 
   def jwt_identifier
@@ -45,6 +46,12 @@ module Tokens
   end
 
   module ClassMethods
+    def extra_expected_keys
+      @extra_expected_keys || []
+    end
+    def add_extra_expected_keys(*keys)
+      (@extra_expected_keys ||= []).concat(keys)
+    end
     def valid_token_and_user?(token)
       valid_user?(valid_token?(token))
     end
