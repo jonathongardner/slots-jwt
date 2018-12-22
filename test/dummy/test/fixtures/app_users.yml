@@ -5,10 +5,14 @@
 # below each fixture, per the syntax in the comments below
 #
 
-confirmed_user:
-  email: 'ConfirmedUserEmail@somewhere.com'
-  confirmed: true
+approved_user:
+  email: 'ApprovedUserEmail@somewhere.com'
+  approved: true
 
-not_confirmed_user:
-  email: 'NotConfirmedUserEmail@somewhere.com'
-  confirmed: false
+another_approved_user:
+  email: 'AnotherApprovedUserEmail@somewhere.com'
+  approved: true
+
+not_approved_user:
+  email: 'NotApprovedUserEmail@somewhere.com'
+  approved: false

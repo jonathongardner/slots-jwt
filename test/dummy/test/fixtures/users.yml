@@ -2,15 +2,15 @@ some_great_user:
   email: 'SomeGenericEmail@somewhere.com'
   username: 'someusername'
   password_digest: <%= BCrypt::Password.create(User.pass) %>
-  confirmed: true
+  approved: true
 
 another_great_user:
   email: 'AnotherGenericEmail@somewhere.com'
   username: 'anotherusername'
   password_digest: <%= BCrypt::Password.create(User.pass) %>
-  confirmed: true
+  approved: true
 
-unconfirmed_user:
-  email: 'UnconfirmedEmail@somewhere.com'
-  username: 'unconfirmedusername'
+unapproved_user:
+  email: 'UnapprovedEmail@somewhere.com'
+  username: 'unapprovedusername'
   password_digest: <%= BCrypt::Password.create(User.pass) %>

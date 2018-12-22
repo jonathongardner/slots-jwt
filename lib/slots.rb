@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require "slots/engine"
-require "slots/confirmable"
+require "slots/approvable"
+require "slots/configuration"
 require "slots/database_authentication"
+require "slots/engine"
+require "slots/extra_classes"
 require "slots/generic_methods"
 require "slots/generic_validations"
-require "slots/configuration"
-require "slots/extra_classes"
 require "slots/slokens"
-require "slots/tokens"
 require "slots/tests"
+require "slots/tokens"
 
 module Slots
   # Your code goes here...
@@ -25,10 +25,10 @@ module Slots
         case extension
         when :database_authentication
           to_include.push(DatabaseAuthentication)
-        when :confirmable
-          to_include.push(Confirmable)
+        when :approvable
+          to_include.push(Approvable)
         else
-          raise "The following slot extension was not found: #{extension}\nThe following are allows :database_authentication, :confirmable"
+          raise "The following slot extension was not found: #{extension}\nThe following are allows :database_authentication, :approvable"
         end
       end
       define_method(:slots?) { |v| extensions.include?(v) }

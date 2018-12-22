@@ -22,7 +22,7 @@ module Slots
     end
 
     def can_loggin
-      return false if self.slots?(:confirmable) && !self.confirmed?
+      return false if self.slots?(:approvable) && !self.approved?
       true
     end
 

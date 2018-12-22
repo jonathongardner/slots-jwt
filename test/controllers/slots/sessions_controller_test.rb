@@ -44,6 +44,14 @@ module Slots
       assert_response_error 'authentication', 'login or password is invalid'
     end
 
+    test "should not sign_in unapproved" do
+      user = users(:unapproved_user)
+      get sign_in_url params: {login: user.email, password: User.pass}
+      assert_response :unauthorized
+
+      assert_response_error 'authentication', 'login or password is invalid'
+    end
+
     test "should not sign_in with invalid login" do
       get sign_in_url params: {login: 'DoesntExist@somewher.com', password: User.pass + '_something_else'}
       assert_response :unauthorized
