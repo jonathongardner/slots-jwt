@@ -7,8 +7,7 @@ class SlotsJwtTest < SlotsTest
     exp = 1.minute.from_now.to_i
     iat = 1.minute.ago.to_i
 
-    jws = Slots::Slokens.to_decode(create_token(identifier: id, exp: exp, iat: iat))
-    jws.decode
+    jws = Slots::Slokens.decode(create_token(identifier: id, exp: exp, iat: iat))
 
     assert jws.valid?, 'Token should be valid'
     assert_equal id, jws.identifier, 'Identifer should be equal to encoded identifier'
@@ -34,29 +33,29 @@ class SlotsJwtTest < SlotsTest
   end
   test "should raise error for invalid token" do
     id = 'SomeIdentifier'
-    error_raised_with_messege(Slots::InvalidPayload, "Payload is missing objects") do
-      Slots::Slokens.to_decode(create_token(identifier: id, exp: 2.minute.from_now.to_i)).decode
+    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
+      Slots::Slokens.decode(create_token(identifier: id, exp: 2.minute.from_now.to_i)).valid!
     end
-    error_raised_with_messege(Slots::InvalidPayload, "Payload is missing objects") do
-      Slots::Slokens.to_decode(create_token(identifier: id, iat: 2.minute.ago.to_i)).decode
+    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
+      Slots::Slokens.decode(create_token(identifier: id, iat: 2.minute.ago.to_i)).valid!
     end
-    error_raised_with_messege(Slots::InvalidPayload, "Payload is missing objects") do
-      Slots::Slokens.to_decode(create_token(exp: 2.minute.from_now.to_i, iat: 2.minute.ago.to_i)).decode
+    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
+      Slots::Slokens.decode(create_token(exp: 2.minute.from_now.to_i, iat: 2.minute.ago.to_i)).valid!
     end
-    error_raised_with_messege(JWT::DecodeError, "Invalid Payload") do
-      Slots::Slokens.to_decode('FakeToken').decode
+    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
+      Slots::Slokens.decode('FakeToken').valid!
     end
-    error_raised_with_messege(JWT::DecodeError, "Invalid Payload") do
-      Slots::Slokens.to_decode("FakeToken.#{Base64.encode64('{]')}.cool").decode
+    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
+      Slots::Slokens.decode("FakeToken.#{Base64.encode64('{]')}.cool").valid!
     end
-    error_raised_with_messege(JWT::DecodeError, "Invalid Payload") do
-      Slots::Slokens.to_decode("FakeToken.#{Base64.encode64('[]')}.cool").decode
+    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
+      Slots::Slokens.decode("FakeToken.#{Base64.encode64('[]')}.cool").valid!
     end
-    error_raised_with_messege(JWT::ExpiredSignature, "Signature has expired") do
-      Slots::Slokens.to_decode(create_token(identifier: id, exp: 2.minute.ago.to_i, iat: 2.minute.ago.to_i)).decode
+    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
+      Slots::Slokens.decode(create_token(identifier: id, exp: 2.minute.ago.to_i, iat: 2.minute.ago.to_i)).valid!
     end
-    error_raised_with_messege(JWT::VerificationError, "Signature verification raised") do
-      Slots::Slokens.to_decode(create_token('my0ther$ecr3t', identifier: id, exp: 2.minute.from_now.to_i, iat: 2.minute.ago.to_i)).decode
+    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
+      Slots::Slokens.decode(create_token('my0ther$ecr3t', identifier: id, exp: 2.minute.from_now.to_i, iat: 2.minute.ago.to_i)).valid!
     end
   end
 end

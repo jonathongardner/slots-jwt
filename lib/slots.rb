@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
 require "slots/engine"
+require "slots/confirmable"
 require "slots/database_authentication"
 require "slots/generic_methods"
 require "slots/generic_validations"
 require "slots/configuration"
 require "slots/extra_classes"
+require "slots/slokens"
 require "slots/tokens"
 require "slots/tests"
 
@@ -17,21 +19,23 @@ module Slots
     end
 
     def slots(*extensions)
-      to_include = [GenericMethods, GenericValidations]
-      @_slots_extensions = []
-      if extensions.include?(:database_authentication)
-        to_include.push(DatabaseAuthentication)
-        @_slots_extensions.push(:database_authentication)
+      to_include = [GenericMethods, GenericValidations, Tokens]
+      extensions.each do |e|
+        extension = e.to_sym
+        case extension
+        when :database_authentication
+          to_include.push(DatabaseAuthentication)
+        when :confirmable
+          to_include.push(Confirmable)
+        else
+          raise "The following slot extension was not found: #{extension}\nThe following are allows :database_authentication, :confirmable"
+        end
       end
-      if extensions.include?(:tokens)
-        to_include.push(Tokens)
-        @_slots_extensions.push(:tokens)
-      end
+      define_method(:slots?) { |v| extensions.include?(v) }
 
-      slots_extensions_not_found = extensions - @_slots_extensions
-      raise "The following slot extensions were not found: #{slots_extensions_not_found}" if slots_extensions_not_found.present?
-      include *to_include
+      include(*to_include)
       has_many :sessions, session_assocaition.merge(class_name: 'Slots::Session')
+
     end
   end
   ActiveRecord::Base.extend Slots::Model

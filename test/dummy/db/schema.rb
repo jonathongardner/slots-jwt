@@ -10,7 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_12_10_142023) do
+ActiveRecord::Schema.define(version: 2018_12_21_185753) do
+
+  create_table "con_users", force: :cascade do |t|
+    t.string "email"
+    t.boolean "confirmed", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_con_users_on_email"
+  end
 
   create_table "db_auth_users", force: :cascade do |t|
     t.string "email"
@@ -50,6 +58,7 @@ ActiveRecord::Schema.define(version: 2018_12_10_142023) do
     t.string "email"
     t.string "username"
     t.string "password_digest"
+    t.boolean "confirmed", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email"

@@ -2,6 +2,6 @@
 
 Slots::Engine.routes.draw do
   get 'sign_in', to: 'sessions#sign_in'
-  # delete 'sign_out', to: 'sessions#sign_out'
+  delete 'sign_out', to: 'sessions#sign_out'
   get 'valid_token', to: 'sessions#valid_token'
 end

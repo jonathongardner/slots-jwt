@@ -16,15 +16,13 @@ module Slots
       render json: current_user.as_json(methods: :token), status: :accepted
     end
 
-    # def sign_out
-    # end
-    #
+    def sign_out
+      Slots::Session.find_by(session: jw_token.session)&.delete if jw_token.session
+      head :ok
+    end
 
     def valid_token
-      @_jw_token = authenticate_with_http_token do |token, options|
-        Slots.configuration.authentication_model.valid_token_or_session?(token)
-      end
-      require_valid_token
+      require_valid_token(session: true)
       render json: current_user.as_json(methods: :token), status: :accepted
     end
 

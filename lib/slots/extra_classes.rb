@@ -1,95 +1,10 @@
 # frozen_string_literal: true
 
-require 'jwt'
 module Slots
   class AuthenticationFailed < StandardError
   end
-  class InvalidPayload < StandardError
-  end
-  class InvalidSecret < StandardError
-  end
   class InvalidToken < StandardError
   end
-  class Slokens
-    attr_reader :token, :identifier, :exp, :iat, :extra_payload
-    def initialize(token: nil, expected_keys: [], identifier: nil, extra_payload: extra_payload)
-      if token
-        @expected_keys = default_expected_keys + expected_keys
-        before_decode(token)
-      else
-        @identifier = identifier
-        @extra_payload = extra_payload.as_json
-        encode
-        @valid = true
-      end
-    end
-    def self.to_decode(token, *expected_keys)
-      self.new(token: token, expected_keys: expected_keys)
-    end
-    def self.encode(identifier, extra_payload)
-      self.new(identifier: identifier, extra_payload: extra_payload)
-    end
-
-    def valid?
-      @valid
-    end
-
-    def update_token
-      encode
-    end
-
-    def session
-      @extra_payload['session']
-    end
-
-    def payload
-      @extra_payload.merge(
-        'identifier' => @identifier,
-        'exp' => @exp,
-        'iat' => @iat,
-      )
-    end
-
-    def decode
-      JWT.decode @token, secret, true, verify_iat: true, algorithm: 'HS256'
-      @valid = true
-    end
-
-    private
-      def default_expected_keys
-        ['identifier', 'exp', 'iat']
-      end
-      def secret
-        @secret ||= Slots.configuration.secret(@iat)
-      end
-      def encode
-        @exp = Slots.configuration.token_lifetime.from_now.to_i
-        @iat = Time.now.to_i
-        raise InvalidSecret if secret.nil?
-        @token = JWT.encode self.payload, secret, 'HS256'
-      end
-      def before_decode(token)
-        @token = token
-        set_payload
-        raise InvalidSecret if secret.nil?
-      end
-
-      def set_payload
-        encoded64 = @token.split('.')[1] || ''
-        string_payload = Base64.decode64(encoded64)
-        begin
-          local_payload = JSON.parse(string_payload)
-          raise JWT::DecodeError, 'Invalid Payload' unless local_payload.is_a?(Hash)
-          @identifier = local_payload['identifier']
-          @exp = local_payload['exp']&.to_i
-          @iat = local_payload['iat']&.to_i
-          @extra_payload = local_payload.except(*default_expected_keys)
-        rescue JSON::ParserError => e
-          raise JWT::DecodeError, 'Invalid Payload'
-        end
-        # return invalid if exp isnt passed (this should only happen if the secret key is compromised...
-        # which at that point you have other problems...)
-        raise InvalidPayload, 'Payload is missing objects' unless payload.slice(*@expected_keys).compact.length == @expected_keys.length
-      end
+  class InvalidSecret < StandardError
   end
 end

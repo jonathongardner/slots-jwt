@@ -12,18 +12,26 @@ module Slots
       return @_current_user if instance_variable_defined?(:@_current_user)
       @_current_user = Slots.configuration.authentication_model.valid_user?(jw_token)
     end
-    def jw_token
-      return @_jw_token if instance_variable_defined?(:@_jw_token)
-      @_jw_token = authenticate_with_http_token do |token, options|
-        Slots.configuration.authentication_model.valid_token?(token)
+    def jw_token(session: false)
+      return @_jw_token if @_jw_token&.valid!
+      @_jw_token = Slots::Slokens.decode(authenticate_with_http_token { |t, _| t })
+      if @_jw_token.expired?
+        return false unless @_jw_token.session && Slots.configuration.session_lifetime
+        user = Slots.configuration.authentication_model.find_by_sloken(@_jw_token)
+        return false unless user
+        session = user.sessions.matches_jwt(@_jw_token)
+        return false unless session
+        @_jw_token.update_token
+        session.update!(jwt_iat: @_jw_token.iat)
       end
+      @_jw_token.valid!
     end
 
-    def require_valid_token
-      raise Slots::InvalidToken, 'Missing token' unless jw_token
+    def require_valid_token(session: false)
+      jw_token(session: session)
     end
     def require_valid_user
-      raise Slots::InvalidToken, 'Missing user' unless current_user
+      raise Slots::InvalidToken unless current_user
     end
 
     module ClassMethods

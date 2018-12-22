@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-class TokenUser < ApplicationRecord
-  include Slots::GenericMethods, Slots::Tokens
+class ConUser < ApplicationRecord
+  slots :confirmable
 
   def authenticate(password)
     password == self.class.pass ? self : false
   end
 
   def self.pass
-    'token_password'
+    'con_password'
   end
 end

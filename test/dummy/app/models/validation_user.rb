@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ValidationUser < ApplicationRecord
-  include GenericValidations
+  include Slots::GenericValidations
 end

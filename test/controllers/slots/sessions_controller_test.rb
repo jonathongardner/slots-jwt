@@ -51,6 +51,12 @@ module Slots
       assert_response_error 'authentication', 'login or password is invalid'
     end
 
+    test "should return user for valid token" do
+      user = users(:some_great_user)
+      authorized_get user, valid_token_url
+      assert_response :accepted
+      assert_equal current_token, parsed_response['token'], 'Should return token passed'
+    end
     test "should not return user for missing token" do
       get valid_token_url
       assert_response :unauthorized
@@ -67,12 +73,6 @@ module Slots
       assert_response :unauthorized
       assert_response_error 'authentication', 'invalid or missing token'
     end
-    test "should return user for valid token" do
-      user = users(:some_great_user)
-      authorized_get user, valid_token_url
-      assert_response :accepted
-      assert_equal current_token, parsed_response['token'], 'Should return token passed'
-    end
     test "should return user for expired token with valid session" do
       user = users(:some_great_user)
       session = slots_sessions(:a_great_session)
@@ -83,6 +83,52 @@ module Slots
       assert parsed_response['token'], 'Should return a token'
       assert current_token != parsed_response['token'], 'Should return a new token'
       assert_decode_token parsed_response['token'], identifier: user.email, extra_payload: {'session' => session.session}
+    end
+    test "should not return user for expired token with valid session" do
+      Slots.configure do |config|
+        config.session_lifetime = nil
+      end
+      user = users(:some_great_user)
+      session = slots_sessions(:a_great_session)
+      token = create_token(identifier: user.jwt_identifier, exp: 1.minute.ago.to_i, iat: session.jwt_iat, session: session.session)
+      get valid_token_url, headers: token_header(token)
+      assert_response :unauthorized
+      assert_response_error 'authentication', 'invalid or missing token'
+    end
+    test "should not return user for expired token with session if iat doesnt match" do
+      user = users(:some_great_user)
+      session = slots_sessions(:a_great_session)
+      token = create_token(identifier: user.jwt_identifier, exp: 1.minute.ago.to_i, iat: 6.minutes.ago.to_i, session: session.session)
+      get valid_token_url, headers: token_header(token)
+      assert_response :unauthorized
+      assert_response_error 'authentication', 'invalid or missing token'
+    end
+    test "should not return user for expired token with session if session doesnt exist" do
+      user = users(:some_great_user)
+      session = slots_sessions(:a_great_session)
+      token = create_token(identifier: user.jwt_identifier, exp: 1.minute.ago.to_i, iat: session.jwt_iat, session: 'SomeSession')
+      get valid_token_url, headers: token_header(token)
+      assert_response :unauthorized
+      assert_response_error 'authentication', 'invalid or missing token'
+    end
+    test "should remove session on sign_out" do
+      user = users(:some_great_user)
+      session = slots_sessions(:a_great_session)
+      token = create_token(identifier: user.jwt_identifier, exp: 1.minute.ago.to_i, iat: session.jwt_iat, session: session.session)
+
+      assert_difference('Slots::Session.count', -1) do
+        delete sign_out_url, headers: token_header(token)
+      end
+      assert_response :ok
+    end
+    test "should not do anything if no session on sign_out" do
+      user = users(:some_great_user)
+      token = create_token(identifier: user.jwt_identifier, exp: 1.minute.from_now.to_i, iat: 6.minutes.ago.to_i)
+
+      assert_no_difference('Slots::Session.count') do
+        delete sign_out_url, headers: token_header(token)
+      end
+      assert_response :ok
     end
 
     # test "should get sign_out" do
