@@ -7,8 +7,12 @@ class CreateUsers < ActiveRecord::Migration[5.2]
       # database_authentication
       t.string :password_digest
 
-      # confirmable
+      # approvable
       t.boolean :approved, default: false, null: false
+
+      # confirmable
+      t.boolean :confirmed, default: false, null: false
+      t.string :confirmation_token
 
       t.timestamps
     end

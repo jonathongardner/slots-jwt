@@ -1,6 +1,7 @@
-require 'test_helper'
+# frozen_string_literal: true
 
-class ConUserTest < ActiveSupport::TestCase
+require 'slots_test'
+class ConUserTest < SlotsTest
   test "should authenticate approved user" do
     approved_user = app_users(:approved_user)
 

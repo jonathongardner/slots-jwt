@@ -2,6 +2,7 @@
 
 require "slots/approvable"
 require "slots/configuration"
+require "slots/confirmable"
 require "slots/database_authentication"
 require "slots/engine"
 require "slots/extra_classes"
@@ -27,8 +28,10 @@ module Slots
           to_include.push(DatabaseAuthentication)
         when :approvable
           to_include.push(Approvable)
+        when :confirmable
+          to_include.push(Confirmable)
         else
-          raise "The following slot extension was not found: #{extension}\nThe following are allows :database_authentication, :approvable"
+          raise "The following slot extension was not found: #{extension}\nThe following are allows :database_authentication, :approvable, :confirmable"
         end
       end
       define_method(:slots?) { |v| extensions.include?(v) }
