@@ -2,34 +2,35 @@
 
 require 'slots_test'
 class SlotsJwtTest < SlotsTest
+
   test "should decode valid token" do
-    id = 'SomeIdentifier'
+    user = {'id' => 'SomeIdentifier'}
     exp = 1.minute.from_now.to_i
     iat = 1.minute.ago.to_i
 
-    jws = Slots::Slokens.decode(create_token(identifier: id, exp: exp, iat: iat))
+    jws = Slots::Slokens.decode(create_token(exp: exp, iat: iat, extra_payload: {}, user: user))
 
     assert jws.valid?, 'Token should be valid'
-    assert_equal id, jws.identifier, 'Identifer should be equal to encoded identifier'
+    assert_equal user, jws.authentication_model_values, 'Identifer should be equal to encoded identifier'
     assert_equal exp, jws.exp, 'exp should be equal to encoded exp'
     assert_equal iat, jws.iat, 'iat should be equal to encoded iat'
   end
   test "should encode valid token" do
-    id = 'SomeIdentifier'
+    user = {'id' => 'SomeIdentifier'}
     extra_payload = {'something_else' => 47}
-    jws = Slots::Slokens.encode(id, extra_payload)
-    assert_decode_token jws.token, identifier: id, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload
+    jws = Slots::Slokens.encode(user, extra_payload)
+    assert_decode_token jws.token, user: user, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload
   end
   test "should encode using config secret" do
     new_secret = 'my0ther$ecr3t'
     Slots.configure do |config|
-      config.secret = (new_secret)
+      config.secret = new_secret
     end
-    id = 'SomeIdentifier'
+    user = {'id' => 'SomeIdentifier'}
     extra_payload = {'something_else' => 47}
 
-    jws = Slots::Slokens.encode(id, extra_payload)
-    assert_decode_token jws.token, identifier: id, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload, secret: new_secret
+    jws = Slots::Slokens.encode(user, extra_payload)
+    assert_decode_token jws.token, user: user, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload, secret: new_secret
   end
   test "should raise error for invalid token" do
     id = 'SomeIdentifier'

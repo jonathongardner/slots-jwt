@@ -3,13 +3,12 @@
 require 'jwt'
 module Slots
   class Slokens
-    attr_reader :token, :identifier, :exp, :iat, :extra_payload, :authenticated_record
-    def initialize(decode: false, encode: false, token: nil, expected_keys: [], identifier: nil, extra_payload: nil)
+    attr_reader :token, :exp, :iat, :extra_payload, :authentication_model_values
+    def initialize(decode: false, encode: false, token: nil, authentication_record: nil, extra_payload: nil)
       if decode
-        @expected_keys = default_expected_keys + expected_keys
         decode(token)
       elsif encode
-        @identifier = identifier
+        @authentication_model_values = authentication_record.as_json
         @extra_payload = extra_payload.as_json
         encode()
         @valid = true
@@ -17,11 +16,11 @@ module Slots
         raise 'must encode or decode'
       end
     end
-    def self.decode(token, *expected_keys)
-      self.new(decode: true, token: token, expected_keys: expected_keys)
+    def self.decode(token)
+      self.new(decode: true, token: token)
     end
-    def self.encode(identifier, extra_payload)
-      self.new(encode: true, identifier: identifier, extra_payload: extra_payload)
+    def self.encode(authentication_record, extra_payload)
+      self.new(encode: true, authentication_record: authentication_record, extra_payload: extra_payload)
     end
 
     def expired?
@@ -46,16 +45,21 @@ module Slots
     end
 
     def payload
-      @extra_payload.merge(
-        'identifier' => @identifier,
+      {
+        authentication_model_key => @authentication_model_values,
         'exp' => @exp,
         'iat' => @iat,
-      )
+        'extra_payload' => @extra_payload,
+      }
     end
 
     private
+      def authentication_model_key
+        Slots.configuration.authentication_model.name.underscore
+      end
+
       def default_expected_keys
-        ['identifier', 'exp', 'iat']
+        ['exp', 'iat', authentication_model_key]
       end
       def secret
         Slots.configuration.secret(@iat)
@@ -78,7 +82,7 @@ module Slots
         rescue JWT::InvalidIatError, JWT::VerificationError, JWT::DecodeError, Slots::InvalidSecret, NoMethodError, JSON::ParserError
           @valid = false
         else
-          @valid = payload.slice(*@expected_keys).compact.length == @expected_keys.length
+          @valid = payload.slice(*default_expected_keys).compact.length == default_expected_keys.length
         end
       end
 
@@ -87,10 +91,10 @@ module Slots
         string_payload = Base64.decode64(encoded64)
         local_payload = JSON.parse(string_payload)
         raise JSON::ParserError unless local_payload.is_a?(Hash)
-        @identifier = local_payload['identifier']
         @exp = local_payload['exp']&.to_i
         @iat = local_payload['iat']&.to_i
-        @extra_payload = local_payload.except(*default_expected_keys)
+        @authentication_model_values = local_payload[authentication_model_key]
+        @extra_payload = local_payload['extra_payload']
       end
   end
 end

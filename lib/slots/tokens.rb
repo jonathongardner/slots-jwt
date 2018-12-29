@@ -5,7 +5,6 @@ module Slots
     extend ActiveSupport::Concern
 
     included do
-      @extra_expected_keys = []
     end
 
     def jwt_identifier
@@ -20,7 +19,7 @@ module Slots
         raise 'Session not valid' unless @new_session.valid?
         options.update(session: @new_session.session)
       end
-      @slots_jwt = Slots::Slokens.encode(jwt_identifier, options)
+      @slots_jwt = Slots::Slokens.encode(self, options)
       if @new_session
         @new_session.jwt_iat = @slots_jwt.iat
         @new_session.save!
@@ -39,28 +38,30 @@ module Slots
     def jwt
       @slots_jwt
     end
-
-    def valid_token!(slots_jwt)
+    def set_token!(slots_jwt)
       @slots_jwt = slots_jwt
-      add_logged_in(:token)
       self
     end
 
-    module ClassMethods
-      def extra_expected_keys
-        @extra_expected_keys || []
+    def valid_in_database?
+      begin
+        jwt_identifier_was = self.jwt_identifier
+        self.reload
+        return false if jwt_identifier_was != self.jwt_identifier
+      rescue ActiveRecord::RecordNotFound
+        return false
       end
-      def add_extra_expected_keys(*keys)
-        (@extra_expected_keys ||= []).concat(keys)
-      end
-      def valid_user?(slots_jwt)
-        slots_jwt.valid!
-        user = self.find_by_sloken(slots_jwt)
-        user&.valid_token!(slots_jwt)
-      end
+      add_logged_in(:token)
+      true
+    end
 
-      def find_by_sloken(slots_jwt)
-        self.find_by(jwt_identifier_column => slots_jwt.identifier)
+    def valid_user?
+      true
+    end
+
+    module ClassMethods
+      def from_sloken(slots_jwt)
+        self.new(slots_jwt.authentication_model_values).set_token!(slots_jwt)
       end
 
       def jwt_identifier_column

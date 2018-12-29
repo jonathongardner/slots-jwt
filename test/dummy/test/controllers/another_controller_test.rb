@@ -11,7 +11,7 @@ class AnotherControllerTest < SlotsIntegrationTest
   end
 
   test "should return im_a_teapot for another_valid_user_url when valid token and invalid user" do
-    get another_valid_user_url, headers: token_header(create_token(identifier: 'SomeUser', exp: 1.minute.from_now.to_i, iat: 2.minute.ago.to_i))
+    get another_valid_user_url, headers: token_header(create_token(user: {id: 0}, exp: 1.minute.from_now.to_i, iat: 2.minute.ago.to_i, extra_payload: {}))
     assert_response_im_a_teapot
     assert_response_error 'my_message', 'Some custom message'
   end
@@ -29,7 +29,7 @@ class AnotherControllerTest < SlotsIntegrationTest
   end
 
   test "should return success for valid_token_url when valid token and invalid user" do
-    get another_valid_token_url, headers: token_header(create_token(identifier: 'SomeUser', exp: 1.minute.from_now.to_i, iat: 2.minute.ago.to_i))
+    get another_valid_token_url, headers: token_header(create_token(user: {id: 0}, exp: 1.minute.from_now.to_i, iat: 2.minute.ago.to_i, extra_payload: {}))
     assert_response :success
   end
 
