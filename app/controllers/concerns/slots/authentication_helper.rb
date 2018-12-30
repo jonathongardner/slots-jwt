@@ -30,15 +30,15 @@ module Slots
       current_user&.valid_in_database?
     end
 
-    def require_valid_user(session: false)
+    def require_valid_user(session: false, confirmed: true)
       jw_token(session: session)
-      raise Slots::InvalidToken unless current_user
+      raise Slots::InvalidToken unless current_user&.valid_user?(confirmed: confirmed)
     end
-    def require_valid_loaded_user(session: false)
+    def require_valid_loaded_user(session: false, confirmed: true)
       jw_token(session: session)
       # Load user will make sure it is in the database and valid in the database
       raise Slots::InvalidToken, "User doesnt exist" unless load_user
-      raise Slots::InvalidToken unless current_user&.valid_user?
+      raise Slots::InvalidToken unless current_user&.valid_user?(confirmed: confirmed)
     end
 
     module ClassMethods

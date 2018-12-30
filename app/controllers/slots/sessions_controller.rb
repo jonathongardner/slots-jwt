@@ -22,7 +22,7 @@ module Slots
     end
 
     def valid_token
-      require_valid_loaded_user(session: true)
+      require_valid_loaded_user(session: true, confirmed: false)
       render json: current_user.as_json(methods: :token), status: :accepted
     end
 

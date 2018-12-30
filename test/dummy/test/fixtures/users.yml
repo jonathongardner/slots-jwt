@@ -22,5 +22,6 @@ unconfirmed_user:
   email: 'UnconfirmedEmail@somewhere.com'
   username: 'unconfirmedusername'
   password_digest: <%= BCrypt::Password.create(User.pass) %>
+  approved: true
   confirmation_token: '5OutOf10KindaConfirmed'
   confirmed: false

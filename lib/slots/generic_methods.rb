@@ -21,8 +21,13 @@ module Slots
       logged_in?
     end
 
-    def can_loggin
-      return false if self.slots?(:approvable) && !self.approved?
+    def can_loggin(approved: true)
+      return false if self.slots?(:approvable) && approved && !self.approved?
+      true
+    end
+
+    def valid_user?(confirmed: true)
+      return false if self.slots?(:confirmable) && confirmed && !self.confirmed?
       true
     end
 

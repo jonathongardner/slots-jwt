@@ -5,13 +5,13 @@ module Slots
   class SessionsControllerTest < SlotsIntegrationTest
     include Engine.routes.url_helpers, Slots::Tests
 
+    #-----Generic logins------------
     test "should sign_in with valid password" do
       user = users(:some_great_user)
       get sign_in_url params: {login: user.email, password: User.pass}
       assert_response :accepted
       assert_decode_token(parsed_response['token'], user: user)
     end
-
     test "should sign_in with valid password and create session" do
       user = users(:some_great_user)
       assert_difference('Slots::Session.count') do
@@ -20,7 +20,6 @@ module Slots
         assert_decode_token(parsed_response['token'], user: user)
       end
     end
-
     test "should sign_in with valid password and different logins" do
       Slots.configure do |config|
         config.logins = {username: /\A[A-Za-z0-9_\-]+\Z/, email: //} # Most inclusive should be last
@@ -35,7 +34,6 @@ module Slots
       assert_response :accepted
       assert_decode_token(parsed_response['token'], user: user)
     end
-
     test "should not sign_in with invalid password" do
       user = users(:some_great_user)
       get sign_in_url params: {login: user.email, password: User.pass + '_something_else'}
@@ -43,7 +41,15 @@ module Slots
 
       assert_response_error 'authentication', 'login or password is invalid'
     end
+    test "should not sign_in with invalid login" do
+      get sign_in_url params: {login: 'DoesntExist@somewher.com', password: User.pass + '_something_else'}
+      assert_response :unauthorized
 
+      assert_response_error 'authentication', 'login or password is invalid'
+    end
+    #-----Generic logins------------
+
+    #-----Add on logins------------
     test "should not sign_in unapproved" do
       user = users(:unapproved_user)
       get sign_in_url params: {login: user.email, password: User.pass}
@@ -51,14 +57,15 @@ module Slots
 
       assert_response_error 'authentication', 'login or password is invalid'
     end
-
-    test "should not sign_in with invalid login" do
-      get sign_in_url params: {login: 'DoesntExist@somewher.com', password: User.pass + '_something_else'}
-      assert_response :unauthorized
-
-      assert_response_error 'authentication', 'login or password is invalid'
+    test "should sign_in with valid password and unconfirmed user" do
+      user = users(:unconfirmed_user)
+      get sign_in_url params: {login: user.email, password: User.pass}
+      assert_response :accepted
+      assert_decode_token(parsed_response['token'], user: user)
     end
+    #-----Add on logins------------
 
+    #-----Generic Valid token------------
     test "should return user for valid token" do
       user = users(:some_great_user)
       authorized_get user, valid_token_url
@@ -126,6 +133,18 @@ module Slots
       assert_response :unauthorized
       assert_response_error 'authentication', 'invalid or missing token'
     end
+    #-----Generic Valid token------------
+
+    #-----Valid token------------
+    test "should return user for valid token and unconfirmed user" do
+      user = users(:unconfirmed_user)
+      authorized_get user, valid_token_url
+      assert_response :accepted
+      assert_equal current_token, parsed_response['token'], 'Should return token passed'
+    end
+    #-----Valid token------------
+
+    #-----Sign out------------
     test "should remove session on sign_out" do
       user = users(:some_great_user)
       session = slots_sessions(:a_great_session)
@@ -145,6 +164,7 @@ module Slots
       end
       assert_response :ok
     end
+    #-----Sign out------------
 
     # test "should get sign_out" do
     #   get sessions_sign_out_url

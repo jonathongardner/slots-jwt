@@ -30,4 +30,19 @@ class ConUserTest < SlotsTest
     unconfirmed_user.save!
     assert '10OutOf10CanConfirm' != unconfirmed_user.confirmation_token, 'Token should be uodated'
   end
+
+  test "should authenticate unconfirmed user" do
+    unconfirmed_user = con_users(:unconfirmed_user)
+
+    assert_not unconfirmed_user.logged_in?, 'Should not be logged_in before validation'
+    assert unconfirmed_user.authenticate?(ConUser.pass), 'Should authenticate user with valid passowrd who is unconfirmed'
+    assert unconfirmed_user.logged_in?, 'Should be logged_in'
+  end
+
+  test "unconfirmed_user should not be valid" do
+    # Check here to to make sure it works by itself
+    unconfirmed_user = con_users(:unconfirmed_user)
+    assert_not unconfirmed_user.valid_user?, 'unconfirmed_user should not be valid'
+    assert unconfirmed_user.valid_user?(confirmed: false), 'unconfirmed_user should be valid if unconfirmed: false'
+  end
 end

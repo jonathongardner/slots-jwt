@@ -55,10 +55,6 @@ module Slots
       true
     end
 
-    def valid_user?
-      true
-    end
-
     module ClassMethods
       def from_sloken(slots_jwt)
         self.new(slots_jwt.authentication_model_values).set_token!(slots_jwt)

@@ -7,7 +7,7 @@ class ConUserTest < SlotsTest
 
     assert_not approved_user.logged_in?, 'Should not be logged_in before validation'
     assert approved_user.authenticate?(AppUser.pass), 'Should authenticate user with valid passowrd who is approved'
-    assert approved_user.logged_in?, 'Should not be logged_in'
+    assert approved_user.logged_in?, 'Should be logged_in'
   end
 
   test "should not authenticate unapproved user" do
@@ -16,5 +16,6 @@ class ConUserTest < SlotsTest
     assert_not unapproved_user.logged_in?, 'Should not be logged_in before validation'
     assert_not unapproved_user.authenticate?(AppUser.pass), 'Should not authenticate user with valid passowrd but unapproved'
     assert_not unapproved_user.logged_in?, 'Should not be logged_in'
+    # assert_not unapproved_user.valid_user?, 'User should not be valid if unapproved'
   end
 end
