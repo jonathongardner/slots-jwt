@@ -13,11 +13,11 @@ class ConUserTest < SlotsTest
   test "should confirm token" do
     unconfirmed_user = con_users(:unconfirmed_user)
 
-    assert_not unconfirmed_user.confirm!('0OutOf10WontConfirm'), 'should not confirm with incorrect token'
+    assert_not unconfirmed_user.confirm('0OutOf10WontConfirm'), 'should not confirm with incorrect token'
     assert_not unconfirmed_user.confirmed, 'should not be confirm'
     assert unconfirmed_user.confirmation_token.present?, 'Token should be present'
 
-    assert unconfirmed_user.confirm!(unconfirmed_user.confirmation_token), 'should confirm with correct token'
+    assert unconfirmed_user.confirm(unconfirmed_user.confirmation_token), 'should confirm with correct token'
     assert unconfirmed_user.confirmed, 'should be confirm'
     assert unconfirmed_user.confirmation_token.blank?, 'Token should be blank after confirmation'
   end

@@ -5,21 +5,24 @@ module Slots
   class SettingsController < ApplicationController
     include AuthenticationHelper
 
-    require_login! valid_user: true
+    require_login! valid_user: true, except: :confirm
     def approve
       authentication = Slots.configuration.authentication_model.find(params[:id])
-      return render json: error_message, status: status_code unless current_user.can_approve?(authentication)
+      return render json: {errors: ["can't approve"]}, status: :forbidden unless current_user.can_approve?(authentication)
       authentication.approve!
       head :ok
     end
 
-    private
-      def error_message
-        {errors: ["can't approve"]}
+    def confirm
+      require_valid_loaded_user(confirmed: false)
+      if current_user.confirm(params[:confirmation_token])
+        current_user.update_session if current_user.jwt.session
+        render json: current_user.as_json(methods: :token), status: :ok
+      else
+        render json: {errors: ["can't confirm"]}, status: :unprocessable_entity #unauthorized
       end
+    end
 
-      def status_code
-        :forbidden
-      end
+    private
   end
 end

@@ -20,8 +20,7 @@ module Slots
     end
 
     def self.matches_jwt(sloken_jws)
-      self.not_expired
-        .find_by(session: sloken_jws.session, jwt_iat: sloken_jws.iat)
+      self.not_expired.find_by(session: sloken_jws.session, jwt_iat: sloken_jws.iat)
     end
     private
       def create_random_session

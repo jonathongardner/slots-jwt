@@ -32,5 +32,27 @@ module Slots
       to_approve.reload
       assert_not to_approve.approved?, 'Should stil not be approved since the user wasnt allowed to'
     end
+
+    test "should confirm user" do
+      to_confirm = users(:unconfirmed_user)
+      assert_not to_confirm.confirmed?, 'Should not be confirmed'
+
+      authorized_get to_confirm, confirm_url(confirmation_token: to_confirm.confirmation_token)
+      assert_response :success
+
+      to_confirm.reload
+      assert to_confirm.confirmed?, 'Should be confirmed'
+    end
+
+    test "should not confirm user" do
+      to_confirm = users(:unconfirmed_user)
+      assert_not to_confirm.confirmed?, 'Should not be confirmed'
+
+      authorized_get to_confirm, confirm_url(confirmation_token: '10OutOf10CantConfirm')
+      assert_response :unprocessable_entity
+
+      to_confirm.reload
+      assert_not to_confirm.confirmed?, 'Should not be confirmed'
+    end
   end
 end

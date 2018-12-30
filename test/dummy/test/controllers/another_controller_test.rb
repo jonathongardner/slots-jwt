@@ -16,17 +16,17 @@ class AnotherControllerTest < SlotsIntegrationTest
     assert_response_error 'my_message', 'Some custom message'
   end
 
-  test "should return success for another_valid_user_url when valid token and user" do
-    user = users(:some_great_user)
-    authorized_get user, another_valid_user_url
-    assert_response :success
-  end
-
   test "should return im_a_teapot for another_valid_user_url when valid token and unconfirmed user" do
     user = users(:unconfirmed_user)
     authorized_get user, another_valid_user_url
     assert_response_im_a_teapot
     assert_response_error 'my_message', 'Some custom message'
+  end
+
+  test "should return success for another_valid_user_url when valid token and user" do
+    user = users(:some_great_user)
+    authorized_get user, another_valid_user_url
+    assert_response :success
   end
 
   test "should return im_a_teapot for valid_token_url when invalid token" do

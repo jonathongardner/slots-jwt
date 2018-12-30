@@ -43,6 +43,13 @@ module Slots
       self
     end
 
+    def update_session
+      session = self.sessions.matches_jwt(jwt)
+      return false unless session
+      jwt.update_token
+      session.update(jwt_iat: jwt.iat)
+    end
+
     def valid_in_database?
       begin
         jwt_identifier_was = self.jwt_identifier

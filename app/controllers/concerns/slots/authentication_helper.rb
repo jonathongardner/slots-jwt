@@ -14,11 +14,7 @@ module Slots
       if @_jw_token.expired?
         return false unless @_jw_token.session && Slots.configuration.session_lifetime
         user = Slots.configuration.authentication_model.from_sloken(@_jw_token)
-        return false unless user&.valid_in_database?
-        session = user.sessions.matches_jwt(@_jw_token)
-        return false unless session
-        @_jw_token.update_token
-        session.update!(jwt_iat: @_jw_token.iat)
+        return false unless user&.update_session
       end
       @_jw_token.valid!
     end
@@ -43,8 +39,11 @@ module Slots
 
     module ClassMethods
       def require_login!(load_user: false, **options)
-        before_action :require_valid_user, **options unless load_user
-        before_action :require_valid_loaded_user, **options if load_user
+        if load_user
+          before_action :require_valid_loaded_user, **options
+        else
+          before_action :require_valid_user, **options
+        end
       end
 
       def catch_invalid_token(response: {errors: {authentication: ['invalid or missing token']}}, status: :unauthorized)
@@ -53,8 +52,12 @@ module Slots
         end
       end
 
-      def ignore_login!(**options)
-        skip_before_action :require_valid_user, **options
+      def ignore_login!(load_user: false, **options)
+        if load_user
+          skip_before_action :require_valid_loaded_user, **options
+        else
+          skip_before_action :require_valid_user, **options
+        end
       end
     end
   end

@@ -22,9 +22,9 @@ module Slots
       self.confirmed
     end
 
-    def confirm!(token)
+    def confirm(token)
       return false unless self.confirmation_token == token
-      self.update!(confirmed: true, confirmation_token: nil)
+      self.update(confirmed: true, confirmation_token: nil)
     end
 
     module ClassMethods
