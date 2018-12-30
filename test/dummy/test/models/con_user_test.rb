@@ -28,7 +28,29 @@ class ConUserTest < SlotsTest
 
     unconfirmed_user.set_new_confirmation_token
     unconfirmed_user.save!
-    assert '10OutOf10CanConfirm' != unconfirmed_user.confirmation_token, 'Token should be uodated'
+    assert '10OutOf10CanConfirm' != unconfirmed_user.confirmation_token, 'Token should be updated'
+  end
+
+  test "should unconfirm if email changed" do
+    confirmed_user = con_users(:confirmed_user)
+
+    assert confirmed_user.confirmed?, 'User should be confirmed'
+    assert confirmed_user.confirmation_token.nil?, 'Should not exist since confirmed'
+
+    confirmed_user.update!(email: 'NewEmail@somwehere.com')
+    assert_not confirmed_user.confirmed?, 'User should be unconfirmed'
+    assert confirmed_user.confirmation_token.present?, 'Token should exist'
+  end
+
+  test "should not unconfirm if not email is changed" do
+    confirmed_user = con_users(:confirmed_user)
+
+    assert confirmed_user.confirmed?, 'User should be confirmed'
+    assert confirmed_user.confirmation_token.nil?, 'Should not exist since confirmed'
+
+    confirmed_user.update!(something_random: 'SomethingRandom')
+    assert confirmed_user.confirmed?, 'User should still be confirmed'
+    assert confirmed_user.confirmation_token.nil?, 'Should not exist since confirmed'
   end
 
   test "should authenticate unconfirmed user" do
@@ -44,5 +66,12 @@ class ConUserTest < SlotsTest
     unconfirmed_user = con_users(:unconfirmed_user)
     assert_not unconfirmed_user.valid_user?, 'unconfirmed_user should not be valid'
     assert unconfirmed_user.valid_user?(confirmed: false), 'unconfirmed_user should be valid if unconfirmed: false'
+  end
+
+  test "sould not return confirmation_token when using as/to_json" do
+    user = con_users(:unconfirmed_user)
+    assert_not user.as_json.key?('confirmation_token'), 'Should not have confirmation_token when converting to json'
+    assert_not JSON.parse(user.to_json).key?('confirmation_token'), 'Should not have confirmation_token when converting to json'
+    assert_not user.as_json(except: [:email]).key?('email'), 'Should still use as json properties'
   end
 end

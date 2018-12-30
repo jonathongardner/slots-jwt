@@ -8,3 +8,7 @@ unconfirmed_user:
   email: UnconfirmedUser@somewhere.com
   confirmed: false
   confirmation_token: '10OutOf10CanConfirm'
+
+confirmed_user:
+  email: ConfirmedUser@somewhere.com
+  confirmed: true

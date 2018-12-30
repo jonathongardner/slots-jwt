@@ -24,6 +24,7 @@ ActiveRecord::Schema.define(version: 2018_12_24_203525) do
     t.string "email"
     t.boolean "confirmed", default: false, null: false
     t.string "confirmation_token"
+    t.string "something_random"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_con_users_on_email"

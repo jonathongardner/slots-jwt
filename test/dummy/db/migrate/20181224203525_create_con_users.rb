@@ -5,6 +5,7 @@ class CreateConUsers < ActiveRecord::Migration[5.2]
       t.boolean :confirmed, default: false, null: false
       t.string :confirmation_token
 
+      t.string :something_random
       t.timestamps
     end
   end

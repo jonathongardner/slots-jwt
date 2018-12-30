@@ -29,4 +29,13 @@ class UserTest < SlotsTest
     assert_not user.valid_user?, 'unconfirmed_user should not be valid'
     assert user.valid_user?(confirmed: false), 'unconfirmed_user should be valid if unconfirmed: false'
   end
+
+  test "sould not return password or confirmation_token when using as/to_json" do
+    user = users(:another_great_user)
+    assert_not user.as_json.key?('password_digest'), 'Should not have password_digest when converting to json'
+    assert_not user.as_json.key?('confirmation_token'), 'Should not have confirmation_token when converting to json'
+    assert_not JSON.parse(user.to_json).key?('password_digest'), 'Should not have password_digest when converting to json'
+    assert_not JSON.parse(user.to_json).key?('confirmation_token'), 'Should not have confirmation_token when converting to json'
+    assert_not user.as_json(except: [:email]).key?('email'), 'Should still use as json properties'
+  end
 end

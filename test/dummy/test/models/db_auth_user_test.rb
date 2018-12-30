@@ -8,6 +8,12 @@ class DbAuthUserTest < SlotsTest
     assert_error_message "can't be blank", new_user, :password
     assert_number_of_errors 1, new_user
   end
+  test "should not create db auth user without confirmation password" do
+    new_user = DbAuthUser.new(email: 'coolBeans@test.com', password: 'Password1', password_confirmation: 'Password2')
+    assert_not new_user.save, 'Saved new user with incorrect info'
+    assert_error_message "doesn't match Password", new_user, :password_confirmation
+    assert_number_of_errors 1, new_user
+  end
   test "should authenticate user using the db" do
     user = db_auth_users(:some_great_db_auth_user)
     assert user.authenticate?(DbAuthUser.pass), 'Should authenticat using bycript'
