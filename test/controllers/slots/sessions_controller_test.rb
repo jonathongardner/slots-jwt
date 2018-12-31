@@ -65,90 +65,93 @@ module Slots
     end
     #-----Add on logins------------
 
-    #-----Generic Valid token------------
-    test "should return user for valid token" do
+    #-----Generic Update Session token------------
+    test "should return user for update session token" do
       user = users(:some_great_user)
-      authorized_get user, valid_token_url
-      assert_response :accepted
-      assert_equal current_token, parsed_response['token'], 'Should return token passed'
+      authorized_get user, update_session_token_url
+      assert_response :unprocessable_entity
+
+      assert_response_error 'token', "doesn't have Session"
     end
-    test "should not return user for missing token" do
-      get valid_token_url
+    test "should not return user for missing token when update session token" do
+      get update_session_token_url
       assert_response :unauthorized
       assert_response_error 'authentication', 'invalid or missing token'
     end
-    test "should not return user for invalid token" do
-      get valid_token_url, headers: token_header('foo')
+    test "should not return user for invalid token when update session token" do
+      get update_session_token_url, headers: token_header('foo')
       assert_response :unauthorized
       assert_response_error 'authentication', 'invalid or missing token'
     end
-    test "should not return user for expired token" do
+    test "should not return user for expired token when update session token" do
       user = users(:some_great_user)
-      get valid_token_url, headers: token_header(create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: 2.minute.ago.to_i, extra_payload: {}))
+      get update_session_token_url, headers: token_header(create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: 2.minute.ago.to_i, extra_payload: {}))
       assert_response :unauthorized
       assert_response_error 'authentication', 'invalid or missing token'
     end
-    test "should not return user for invalid user" do
+    test "should not return user for invalid user when update session token" do
       user = users(:some_great_user)
       token = create_token(user: user.as_json.merge('email' => 'SomethingElse'), exp: 1.minute.from_now.to_i, iat: 2.minute.ago.to_i, extra_payload: {})
-      get valid_token_url, headers: token_header(token)
+      get update_session_token_url, headers: token_header(token)
       assert_response :unauthorized
       assert_response_error 'authentication', 'invalid or missing token'
     end
-    test "should return user for expired token with valid session" do
+    test "should return user for expired token with valid session when update session token" do
       user = users(:some_great_user)
       session = slots_sessions(:a_great_session)
       token = create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: session.jwt_iat, extra_payload: {session: session.session})
-      get valid_token_url, headers: token_header(token)
+      get update_session_token_url, headers: token_header(token)
       assert_response :accepted
 
       assert parsed_response['token'], 'Should return a token'
       assert current_token != parsed_response['token'], 'Should return a new token'
       assert_decode_token parsed_response['token'], user: user, extra_payload: {'session' => session.session}
     end
-    test "should not return user for expired token with valid session" do
+    test "should not return user for expired token with valid session and session lifetime nil when update session token" do
       Slots.configure do |config|
         config.session_lifetime = nil
       end
       user = users(:some_great_user)
       session = slots_sessions(:a_great_session)
       token = create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: session.jwt_iat, extra_payload: {session: session.session})
-      get valid_token_url, headers: token_header(token)
+      get update_session_token_url, headers: token_header(token)
       assert_response :unauthorized
       assert_response_error 'authentication', 'invalid or missing token'
     end
-    test "should not return user for expired token with session if iat doesnt match" do
+    test "should not return user for expired token with session if iat doesnt match when update session token" do
       user = users(:some_great_user)
       session = slots_sessions(:a_great_session)
       token = create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: 6.minutes.ago.to_i, extra_payload: {session: session.session})
-      get valid_token_url, headers: token_header(token)
+      get update_session_token_url, headers: token_header(token)
       assert_response :unauthorized
       assert_response_error 'authentication', 'invalid or missing token'
     end
-    test "should not return user for expired token with session if session doesnt exist" do
+    test "should not return user for expired token with session if session doesnt exist when update session token" do
       user = users(:some_great_user)
       session = slots_sessions(:a_great_session)
       token = create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: session.jwt_iat, extra_payload: {session: 'SomeSession'})
-      get valid_token_url, headers: token_header(token)
+      get update_session_token_url, headers: token_header(token)
       assert_response :unauthorized
       assert_response_error 'authentication', 'invalid or missing token'
     end
-    #-----Generic Valid token------------
+    #-----Generic Update Session token------------
 
-    #-----Valid token------------
-    test "should return user for valid token and unconfirmed user" do
+    #-----Update Session token------------
+    test "should return user for valid token and unconfirmed user when update session token" do
       user = users(:unconfirmed_user)
-      authorized_get user, valid_token_url
+      session = slots_sessions(:unconfirmed_session)
+      token = create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: session.jwt_iat, extra_payload: {session: session.session})
+      get update_session_token_url, headers: token_header(token)
       assert_response :accepted
-      assert_equal current_token, parsed_response['token'], 'Should return token passed'
+      assert current_token != parsed_response['token'], 'Should return new token'
     end
-    #-----Valid token------------
+    #-----Update Session token------------
 
     #-----Sign out------------
     test "should remove session on sign_out" do
       user = users(:some_great_user)
       session = slots_sessions(:a_great_session)
-      token = create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: session.jwt_iat, extra_payload: {session: session.session})
+      token = create_token(user: user.as_json, exp: 1.minute.from_now.to_i, iat: session.jwt_iat, extra_payload: {session: session.session})
 
       assert_difference('Slots::Session.count', -1) do
         delete sign_out_url, headers: token_header(token)

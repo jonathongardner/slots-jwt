@@ -11,3 +11,8 @@ an_expired_session:
   user: some_great_user
   updated_at: <%= 3.weeks.ago %>
   created_at: <%= 4.weeks.ago %>
+
+unconfirmed_session:
+  session: ThisIsMyUnconfirmedSession
+  jwt_iat: <%= 2.minutes.ago.to_i %>
+  user: unconfirmed_user

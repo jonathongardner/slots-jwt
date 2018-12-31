@@ -5,7 +5,9 @@ module Slots
   class SessionsController < ApplicationController
     include AuthenticationHelper
 
-    require_login! except: [:sign_in, :valid_token]
+    new_session_token! only: :update_session_token
+    require_login! load_user: true, confirmed: false, only: :update_session_token
+    require_login! except: [:sign_in, :update_session_token]
 
     def sign_in
       @_current_user = _authentication_model.find_for_authentication(params[:login])
@@ -21,10 +23,14 @@ module Slots
       head :ok
     end
 
-    def valid_token
-      require_valid_loaded_user(session: true, confirmed: false)
+    def update_session_token
+      return render json: {errors: {token: ["doesn't have Session"]}}, status: :unprocessable_entity unless jw_token.session
       render json: current_user.as_json(methods: :token), status: :accepted
     end
+
+    # def valid_token
+    #   render json: current_user.as_json(methods: :token), status: :accepted
+    # end
 
     rescue_from Slots::AuthenticationFailed do |exception|
       render json: {errors: {authentication: ['login or password is invalid']}}, status: :unauthorized

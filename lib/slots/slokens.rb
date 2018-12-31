@@ -41,7 +41,7 @@ module Slots
     end
 
     def session
-      @extra_payload['session']
+      @extra_payload&.dig('session')
     end
 
     def payload

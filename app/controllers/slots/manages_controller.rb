@@ -3,12 +3,15 @@ require_dependency "slots/application_controller"
 module Slots
   class ManagesController < ApplicationController
     include AuthenticationHelper
-    require_login! load_user: true, except: :create
+    require_login! load_user: true, except: [:create, :new_confirmation_token]
 
     # POST /manages
     def create
       @manage = authentication_model.new(manage_params(:password, :password_confirmation))
       if @manage.save
+        # TODO Think about returning the token on create
+        # @manage.create_token(ActiveModel::Type::Boolean.new.cast(params[:session]))
+        # render json: @manage.as_json(methods: :token), status: :created
         render json: @manage.as_json, status: :created
       else
         render json: {errors: @manage.errors}, status: :unprocessable_entity
@@ -17,6 +20,7 @@ module Slots
 
     # PATCH/PUT /manages
     def update
+      # To change any user information you need to reenter the password
       return render json: {errors: {authentication: ['password is invalid']}}, status: :unauthorized unless current_user.authenticate?(params[:password])
       if current_user.update(manage_params(:password, :password_confirmation))
         render json: current_user.as_json, status: :accepted
@@ -25,6 +29,18 @@ module Slots
       end
     end
 
+    def new_confirmation_token
+      require_valid_loaded_user(confirmed: false)
+      # This will unconfirm user if they are confirmed think about disabling this route
+      current_user.set_new_confirmation_token
+      if current_user.save
+        head :accepted
+      else
+        render json: {errors: current_user.errors}, status: :unprocessable_entity
+      end
+    end
+
+    catch_invalid_token
     # # DELETE /manages/1
     # def destroy
     #   @manage.destroy

@@ -81,18 +81,6 @@ module Slots
       assert user.authenticate?("New#{User.pass}"), 'Password should not be updated 2'
     end
 
-    test "should not update if password passed is incorrect" do
-      user = users(:some_great_user)
-      params = {
-        email: 'SomeOneNew@somwhere.com',
-      }
-      authorized_patch user, update_user_url, params: { password: "SomethingElse", user: params }
-      assert_response :unauthorized
-
-      user.reload
-      assert user.email != params[:email], 'Email should be updated'
-    end
-
     test "should not update user if error" do
       user = users(:some_great_user)
       params = {
@@ -106,6 +94,42 @@ module Slots
       user.reload
       assert user.email != params[:email], 'Email should be updated'
       assert user.username != params[:username], 'Username should be updated'
+    end
+
+    test "should not update if password passed is incorrect" do
+      user = users(:some_great_user)
+      params = {
+        email: 'SomeOneNew@somwhere.com',
+      }
+      authorized_patch user, update_user_url, params: { password: "SomethingElse", user: params }
+      assert_response :unauthorized
+
+      user.reload
+      assert user.email != params[:email], 'Email should be updated'
+    end
+
+    test "should not update if not logged in" do
+      params = {
+        email: 'SomeOneNew@somwhere.com',
+      }
+      put update_user_url, params: { password: User.pass, user: params }
+      assert_response :unauthorized
+    end
+
+    test "should update confirmation_token" do
+      user = users(:unconfirmed_user)
+      confirmation_token = user.confirmation_token
+
+      authorized_get user, new_confirmation_token_url
+      assert_response :success
+
+      user.reload
+      assert user.confirmation_token != confirmation_token, 'Confirmation token should be updated'
+    end
+
+    test "should not update confirmation_token if not logged in" do
+      get new_confirmation_token_url
+      assert_response :unauthorized
     end
 
     # test "should destroy manage" do
