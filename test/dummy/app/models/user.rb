@@ -10,4 +10,16 @@ class User < ApplicationRecord
   def can_approve?(_)
     self.username == 'someusername'
   end
+
+  def send_confirmation_email
+    self.class.email_count = self.class.email_count + 1
+  end
+
+  def self.email_count
+    @email_count
+  end
+
+  def self.email_count=(v)
+    @email_count = v
+  end
 end

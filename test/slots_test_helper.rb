@@ -4,10 +4,12 @@ require 'test_helper'
 module SlotsTestHelper
   def setup
     ENV['SLOT_SECRET'] = 'my$ecr3t'
+    User.email_count = 0
     Slots.configuration = nil # Reset to default configuration
   end
   def teardown
     ENV['SLOT_SECRET'] = 'my$ecr3t'
+    User.email_count = 0
     Slots.configuration = nil # Reset to default configuration
   end
   def error_raised_with_messege(error, error_message)

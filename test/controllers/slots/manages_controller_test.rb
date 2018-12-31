@@ -12,7 +12,7 @@ module Slots
         password: 'NewPassword',
         password_confirmation: 'NewPassword'
       }
-      assert_difference('User.count') do
+      assert_difference(['User.count', 'User.email_count']) do
         post create_user_url, params: { user: params}
         assert_response :success
       end
@@ -25,7 +25,7 @@ module Slots
         password: 'Password1',
         password_confirmation: 'Password2'
       }
-      assert_no_difference('User.count') do
+      assert_no_difference(['User.count', 'User.email_count']) do
         post create_user_url, params: { user: params}
       end
       assert_response :unprocessable_entity
@@ -42,7 +42,9 @@ module Slots
         approved: false,
         confirmation_token: 'cool',
       }
-      authorized_patch user, update_user_url, params: { password: User.pass, user: params }
+      assert_no_difference('User.email_count') do
+        authorized_patch user, update_user_url, params: { password: User.pass, user: params }
+      end
       assert_response :success
 
       user.reload
@@ -59,7 +61,9 @@ module Slots
       params = {
         email: 'SomeOneNew@somwhere.com',
       }
-      authorized_patch user, update_user_url, params: { password: User.pass, user: params }
+      assert_difference('User.email_count') do
+        authorized_patch user, update_user_url, params: { password: User.pass, user: params }
+      end
       assert_response :success
 
       user.reload

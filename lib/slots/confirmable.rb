@@ -7,6 +7,11 @@ module Slots
     included do
       before_validation :set_new_confirmation_token, if: :email_changed?
       validate :confirmable_columns
+      after_commit :send_confirmation_email, if: :send_confirmation_email?
+    end
+
+    def send_confirmation_email?
+      @send_confirmation_email
     end
 
     def confirmable_columns
@@ -21,10 +26,15 @@ module Slots
     def set_new_confirmation_token
       self.confirmed = false
       self.confirmation_token = SecureRandom.hex(4)
+      @send_confirmation_email = true
     end
 
     def confirmed?
       self.confirmed
+    end
+
+    def send_confirmation_email
+      Rails.logger.warn("SLOTS: Confirmation email not sent. Need to override send_confirmation_email in authentication model")
     end
 
     def confirm(token)
