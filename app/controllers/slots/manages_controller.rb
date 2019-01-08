@@ -2,7 +2,6 @@
 require_dependency "slots/application_controller"
 module Slots
   class ManagesController < ApplicationController
-    include AuthenticationHelper
     require_login! load_user: true, except: [:create, :new_confirmation_token]
 
     # POST /manages

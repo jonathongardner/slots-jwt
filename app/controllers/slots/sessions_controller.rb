@@ -3,8 +3,6 @@
 require_dependency "slots/application_controller"
 module Slots
   class SessionsController < ApplicationController
-    include AuthenticationHelper
-
     new_session_token! only: :update_session_token
     require_login! load_user: true, confirmed: false, only: :update_session_token
     require_login! except: [:sign_in, :update_session_token]

@@ -3,8 +3,6 @@
 require_dependency "slots/application_controller"
 module Slots
   class SettingsController < ApplicationController
-    include AuthenticationHelper
-
     require_login! load_user: true, except: :confirm
     def approve
       authentication = Slots.configuration.authentication_model.find(params[:id])

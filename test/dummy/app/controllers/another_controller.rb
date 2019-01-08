@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class AnotherController < ApplicationController
-  include Slots::AuthenticationHelper
-
   require_login! load_user: true, only: [:valid_user]
   require_login! only: [:valid_token]
 
