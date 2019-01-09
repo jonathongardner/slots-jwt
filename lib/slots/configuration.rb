@@ -27,7 +27,7 @@ module Slots
     end
 
     def authentication_model
-      @authentication_model.to_s.constantize
+      @authentication_model.to_s.constantize rescue nil
     end
 
     def secret=(v)
