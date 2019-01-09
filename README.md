@@ -46,7 +46,17 @@ require_login!
 `require_login!` takes the usual options `before_action` (`only`, `except`) and also `load_user`.
   - `load_user`: a Boolean. Default is false, which means the `current_user` will be populated with the information from JWT. This can be a problem because the info in the JWT could become out of date; it would not update until the token has expired. If true `current_user` will be reloaded from the database. Default is false to help keep the JWT stateless.
 
-It is sometimes easier to always require login and to explicitly ignore it. To do this add the above to the `ApplicationController`. Than on routes that you do not want to require authentication use the following method.
+This method will raise a `Slots::InvalidToken` Error. This error can be caught using the helper method `catch_invalid_token`. If nothing is passed the following will be returned with a unauthorized status:
+```
+  'errors' => {
+    'authentication' => ['invalid or missing token']
+  }
+```
+A custom message or status can be returned using the following:
+```ruby
+catch_invalid_token(response: {errors: {my_message: ['Some custom message']}}, status: :im_a_teapot)
+```
+It is sometimes easier to always require login and to explicitly ignore it. To do this add `require_login!` and `catch_invalid_token` to the `ApplicationController`. Than on routes that you do not want to require authentication use the following method.
 ```ruby
 ignore_login!
 ```

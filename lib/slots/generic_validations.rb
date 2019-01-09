@@ -24,9 +24,12 @@ module Slots
       # Use this rather than validates because logins in configure might not be set yet on include
       Slots.configuration.logins.each do |column, _|
         value = self.send(column)
-        self.errors.add(column, "can't be blank") unless value.present?
+        next self.errors.add(column, "can't be blank") unless value.present?
+
         pk_value = self.send(self.class.primary_key)
-        self.errors.add(column, "already taken") if self.class.where.not(self.class.primary_key => pk_value).exists?(column => value)
+        lower_case = self.class.arel_table[column].lower.eq(value.downcase)
+        next unless self.class.where.not(self.class.primary_key => pk_value).where(lower_case).exists?
+        self.errors.add(column, "has already been taken")
       end
     end
 

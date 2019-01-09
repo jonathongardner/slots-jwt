@@ -18,15 +18,18 @@ class ValidationUserTest < SlotsTest
 
   test "should not create generic user with none unique logins present" do
     new_user = validation_users(:some_great_validation_user).dup
+    new_user.email.swapcase!
+    new_user.username.swapcase!
+
     assert_not new_user.save, 'saved new user without unique login'
-    assert_error_message "already taken", new_user, :email
+    assert_error_message "has already been taken", new_user, :email
     assert_number_of_errors 1, new_user
 
     Slots.configure do |config|
       config.logins = {email: /@/, username: //} # Most inclusive should be last
     end
     assert_not new_user.save, 'saved new user without unique login'
-    assert_error_message "already taken", new_user, :email, :username
+    assert_error_message "has already been taken", new_user, :email, :username
     assert_number_of_errors 2, new_user
   end
 

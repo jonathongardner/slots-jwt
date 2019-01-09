@@ -13,7 +13,7 @@ module Slots
         password_confirmation: 'NewPassword'
       }
       assert_difference(['User.count', 'User.email_count']) do
-        post create_user_url, params: { user: params}
+        post create_user_url, params: {user: params}
         assert_response :success
       end
     end
@@ -26,7 +26,7 @@ module Slots
         password_confirmation: 'Password2'
       }
       assert_no_difference(['User.count', 'User.email_count']) do
-        post create_user_url, params: { user: params}
+        post create_user_url, params: {user: params}
       end
       assert_response :unprocessable_entity
 
@@ -43,7 +43,7 @@ module Slots
         confirmation_token: 'cool',
       }
       assert_no_difference('User.email_count') do
-        authorized_patch user, update_user_url, params: { password: User.pass, user: params }
+        authorized_patch user, update_user_url, params: {password: User.pass, user: params }
       end
       assert_response :success
 
@@ -78,7 +78,7 @@ module Slots
         password: "New#{User.pass}",
         password_confirmation: "New#{User.pass}",
       }
-      authorized_patch user, update_user_url, params: { password: User.pass, user: params }
+      authorized_patch user, update_user_url, params: {password: User.pass, user: params}
       assert_response :success
 
       user.reload
@@ -91,9 +91,9 @@ module Slots
         email: users(:another_great_user).email, # TODO should setup email when changed to reconfirm email
         username: 'SomeNewUserName',
       }
-      authorized_patch user, update_user_url, params: { password: User.pass, user: params }
+      authorized_patch user, update_user_url, params: {password: User.pass, user: params}
       assert_response :unprocessable_entity
-      assert_response_error 'email', "already taken"
+      assert_response_error 'email', "has already been taken"
 
       user.reload
       assert user.email != params[:email], 'Email should be updated'
@@ -105,7 +105,7 @@ module Slots
       params = {
         email: 'SomeOneNew@somwhere.com',
       }
-      authorized_patch user, update_user_url, params: { password: "SomethingElse", user: params }
+      authorized_patch user, update_user_url, params: {password: "SomethingElse", user: params}
       assert_response :unauthorized
 
       user.reload
@@ -116,7 +116,7 @@ module Slots
       params = {
         email: 'SomeOneNew@somwhere.com',
       }
-      put update_user_url, params: { password: User.pass, user: params }
+      put update_user_url, params: {password: User.pass, user: params}
       assert_response :unauthorized
     end
 

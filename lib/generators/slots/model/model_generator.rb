@@ -6,6 +6,7 @@ module Slots
 
     def copy_model
       template "model.rb", "app/models/#{name.underscore}.rb"
+      template "model_test.rb", "test/models/#{name.underscore}_test.rb"
       template "create_models.rb", "db/migrate/#{Time.now.strftime("%Y%m%d%H%M%S")}_create_#{name.underscore.pluralize}.rb"
     end
 
