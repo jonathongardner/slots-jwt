@@ -1,0 +1,12 @@
+Description:
+    This is used for creating slots config file and adding the routes to config/routes.rb
+
+Example:
+    rails generate slots:install
+
+    This will create:
+        config/initializers.slots.rb
+
+    This will add:
+      TO: config/routes.rb
+        mount Slots::Engine => "/slots"

@@ -25,7 +25,7 @@ This will mount all slot routes to `auth/*`.
 
 Next, the following command can be used to generate the authentication model.
 ```console
-$ rails generate slots User
+$ rails generate slots:model User
 ```
 Any rails accepted name can be used for the model but `User` is the expected default. If a different name is used for the authentication model than it must be defined in the config file for slots (this will automatically be done if the `generate slots` is used).
 config/initializers/slots.rb

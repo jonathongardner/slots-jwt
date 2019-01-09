@@ -1,0 +1,8 @@
+Description:
+    Create the authentication model
+
+Example:
+    rails generate model MODEL
+
+    This will create:
+        app/models/model.rb
