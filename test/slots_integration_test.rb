@@ -7,6 +7,10 @@ class SlotsIntegrationTest < ActionDispatch::IntegrationTest
     @parsed_response ||= JSON.parse(response.body)
   end
 
+  def returned_token
+    response.headers['authorization'][13..-1]
+  end
+
   def assert_response_error(*keys, error_message)
     assert parsed_response.key?('errors'), 'should be nested in errors'
     errors = parsed_response['errors']

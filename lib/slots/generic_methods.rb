@@ -38,7 +38,9 @@ module Slots
     module ClassMethods
       def find_for_authentication(login)
         Slots.configuration.logins.each do |k, v|
-          return self.find_by(k => login) if login&.match(v)
+          next unless login&.match(v)
+          lower_case = self.arel_table[k].lower.eq(login.downcase)
+          return self.where(lower_case).first
         end
         nil
       end

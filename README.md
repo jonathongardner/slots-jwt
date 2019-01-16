@@ -97,6 +97,8 @@ This would make it if a value for login is passed and it has an @ symbol than ch
 - `secret`: This is the secret used to encode the JWS.
 - `token_lifetime`: This is the lifetime of the token, it should be kept short (less than one hour).
 - `session_lifetime`: This is the session lifetime, set to nil if you do not want to use sessions.
+- `previous_jwt_lifetime`: This is the lifetime of the previous_jwt, for example if two request are sent with an expired token the first one will update the session making the second one invalid (because the iat doesn't match the session). Therefore this is to give time for all following request to use the new token.
+- `update_expired_session_tokens`: This will update and return a new token if an expired session token is used.
 
 ## Routes
 
@@ -106,9 +108,9 @@ All these routes will be mounted at the route used above in `mount Slots::Engine
 | ------------ | ----- | ----- | --- |
 | `slots.create_user_url` | POST  `/users` | Does not require Token |  This is for creating a user. |
 | `slots.update_user_url` | PUT/PATCH `/users` | Requires Token | This is for editing a user. No ID is needed because a user can only edit their info (`current_user`) |
-| `slots.sign_in` | GET/POST `/sign_in` | Does not require Token | This is used to sign in. login and password are expected as params. If the credentials are valid the user is returned with the token. `{'user' => {..., 'token' => SOMETOKEN}}` |
+| `slots.sign_in` | GET/POST `/sign_in` | Does not require Token | This is used to sign in. login and password are expected as params. If the credentials are valid the user is returned with the token in header in the following format: `'authorization' => 'Bearer token=TOKEN'` (same as sending) |
 | `slots.sign_out` | DELETE `/sign_out` | Requires Token | This is used to sign out. This will delete the session if one exist for the token. |
-| `slots.update_session_token` | GET `/update_session_token` | Requires Token (token can be expired). | This is used get a new token from an expired token using the session in the JWT. The token is returned in the same way as sign_in. |
+| `slots.update_session_token` | GET `/update_session_token` | Requires Token (token can be expired). | This is used to force a new token to be returned from an expired token using the session in the JWT. The token is returned in the same way as sign_in. |
 | `slots.approve` | GET `/approve/:id` | Requires token and a user who can_approve?(:id). | This is for a user like admin to approve new users. |
 
 

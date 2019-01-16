@@ -6,3 +6,4 @@ Example:
 
     This will create:
         app/models/model.rb
+        db/migrate/YYYYMMDDHHMMSS_create_models.rb

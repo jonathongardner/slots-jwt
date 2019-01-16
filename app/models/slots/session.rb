@@ -20,7 +20,19 @@ module Slots
     end
 
     def self.matches_jwt(sloken_jws)
-      self.not_expired.find_by(session: sloken_jws.session, jwt_iat: sloken_jws.iat)
+      jwt_where = self.arel_table[:jwt_iat].eq(sloken_jws.iat)
+      if Slots.configuration.previous_jwt_lifetime
+        jwt_where = jwt_where.or(
+          Arel::Nodes::Grouping.new(
+            self.arel_table[:previous_jwt_iat].eq(sloken_jws.iat)
+              .and(self.arel_table[:jwt_iat].gt(Slots.configuration.previous_jwt_lifetime.ago.to_i))
+            )
+        )
+      end
+
+      self.not_expired
+        .where(jwt_where)
+        .find_by(session: sloken_jws.session)
     end
     private
       def create_random_session

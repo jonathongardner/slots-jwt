@@ -6,6 +6,7 @@ Example:
 
     This will create:
         config/initializers.slots.rb
+        db/migrate/YYYYMMDDHHMMSS_create_slots_sessions.rb
 
     This will add:
       TO: config/routes.rb

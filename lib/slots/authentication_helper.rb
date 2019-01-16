@@ -10,23 +10,39 @@ module Slots
 
     def jw_token
       return @_jw_token if @_jw_token&.valid!
-      @_jw_token = Slots::Slokens.decode(authenticate_with_http_token { |t, _| t })
+
+      if Slots.configuration.update_expired_session_tokens
+        @_jw_token = Slots::Slokens.decode(authenticate_with_http_token { |t, _| t })
+        if @_jw_token.expired? && @_jw_token.session.present? && Slots.configuration.session_lifetime
+          @_current_user = Slots.configuration.authentication_model.from_sloken(@_jw_token)
+          @_current_user&.update_session
+        end
+      else
+        @_jw_token = Slots::Slokens.decode(authenticate_with_http_token { |t, _| t })
+      end
       @_jw_token.valid!
     end
 
     def new_session_token
       @_jw_token = Slots::Slokens.decode(authenticate_with_http_token { |t, _| t })
-      return false unless @_jw_token.session && Slots.configuration.session_lifetime
-      user = Slots.configuration.authentication_model.from_sloken(@_jw_token)
-      return false unless user&.update_session
+      return false unless @_jw_token.session.present? && Slots.configuration.session_lifetime
+      @_current_user = Slots.configuration.authentication_model.from_sloken(@_jw_token)
+      return false unless @_current_user&.update_session
     end
 
     def current_user
       return @_current_user if instance_variable_defined?(:@_current_user)
-      @_current_user = Slots.configuration.authentication_model.from_sloken(jw_token)
+      current_user = Slots.configuration.authentication_model.from_sloken(jw_token)
+      # So if jw_token initalize current_user if expired
+      @_current_user ||= current_user
     end
     def load_user
       current_user&.valid_in_database?
+    end
+
+    def set_token_header!
+      # check if current user for logout
+      response.set_header('authorization', "Bearer token=#{current_user.token}") if current_user&.new_token?
     end
 
     def require_valid_user(confirmed: true)
@@ -59,10 +75,12 @@ module Slots
 
       def require_login!(load_user: false, confirmed: true, **options)
         before_action login_function(load_user: load_user, confirmed: confirmed), **options
+        after_action :set_token_header!, **options
       end
 
       def ignore_login!(load_user: false, confirmed: true, **options)
         skip_before_action login_function(load_user: load_user, confirmed: confirmed), **options
+        skip_after_action :set_token_header!, **options
       end
 
       def catch_invalid_token(response: {errors: {authentication: ['invalid or missing token']}}, status: :unauthorized)

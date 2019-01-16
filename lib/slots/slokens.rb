@@ -3,13 +3,14 @@
 require 'jwt'
 module Slots
   class Slokens
-    attr_reader :token, :exp, :iat, :extra_payload, :authentication_model_values
-    def initialize(decode: false, encode: false, token: nil, authentication_record: nil, extra_payload: nil)
+    attr_reader :token, :exp, :iat, :extra_payload, :authentication_model_values, :session
+    def initialize(decode: false, encode: false, token: nil, authentication_record: nil, extra_payload: nil, session: nil)
       if decode
         decode(token)
       elsif encode
         @authentication_model_values = authentication_record.as_json
         @extra_payload = extra_payload.as_json
+        @session = session
         encode()
         @valid = true
       else
@@ -19,8 +20,8 @@ module Slots
     def self.decode(token)
       self.new(decode: true, token: token)
     end
-    def self.encode(authentication_record, extra_payload)
-      self.new(encode: true, authentication_record: authentication_record, extra_payload: extra_payload)
+    def self.encode(authentication_record, session = '', extra_payload)
+      self.new(encode: true, authentication_record: authentication_record, session: session, extra_payload: extra_payload)
     end
 
     def expired?
@@ -40,15 +41,12 @@ module Slots
       encode
     end
 
-    def session
-      @extra_payload&.dig('session')
-    end
-
     def payload
       {
         authentication_model_key => @authentication_model_values,
         'exp' => @exp,
         'iat' => @iat,
+        'session' => @session,
         'extra_payload' => @extra_payload,
       }
     end
@@ -59,7 +57,7 @@ module Slots
       end
 
       def default_expected_keys
-        ['exp', 'iat', authentication_model_key]
+        ['exp', 'iat', 'session', authentication_model_key]
       end
       def secret
         Slots.configuration.secret(@iat)
@@ -93,6 +91,7 @@ module Slots
         raise JSON::ParserError unless local_payload.is_a?(Hash)
         @exp = local_payload['exp']&.to_i
         @iat = local_payload['iat']&.to_i
+        @session = local_payload['session']
         @authentication_model_values = local_payload[authentication_model_key]
         @extra_payload = local_payload['extra_payload']
       end

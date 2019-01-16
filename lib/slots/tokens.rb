@@ -11,19 +11,21 @@ module Slots
       send(self.class.jwt_identifier_column)
     end
 
-    def create_token(session)
+    def create_token(have_session)
       options = {**extra_payload}
-      if session && Slots.configuration.session_lifetime
+      session = ''
+      if have_session && Slots.configuration.session_lifetime
         @new_session = self.sessions.new(jwt_iat: 0)
         # Session should never be invalid since its all programmed
         raise 'Session not valid' unless @new_session.valid?
-        options.update(session: @new_session.session)
+        session = @new_session.session
       end
-      @slots_jwt = Slots::Slokens.encode(self, options)
+      @slots_jwt = Slots::Slokens.encode(self, session, options)
       if @new_session
         @new_session.jwt_iat = @slots_jwt.iat
         @new_session.save!
       end
+      @new_token = true
       token
     end
 
@@ -46,8 +48,17 @@ module Slots
     def update_session
       session = self.sessions.matches_jwt(jwt)
       return false unless session
+      old_iat = jwt.iat
       jwt.update_token
-      session.update(jwt_iat: jwt.iat)
+      if session.jwt_iat == old_iat
+        # if old_iat == previous_jwt_iat dont update and return token
+        session.update(previous_jwt_iat: old_iat, jwt_iat: jwt.iat)
+        @new_token = true
+      end
+    end
+
+    def new_token?
+      @new_token
     end
 
     def valid_in_database?

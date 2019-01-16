@@ -8,7 +8,7 @@ class SlotsJwtTest < SlotsTest
     exp = 1.minute.from_now.to_i
     iat = 1.minute.ago.to_i
 
-    jws = Slots::Slokens.decode(create_token(exp: exp, iat: iat, extra_payload: {}, user: user))
+    jws = Slots::Slokens.decode(create_token(exp: exp, iat: iat, extra_payload: {}, user: user, session: ''))
 
     assert jws.valid?, 'Token should be valid'
     assert_equal user, jws.authentication_model_values, 'Identifer should be equal to encoded identifier'

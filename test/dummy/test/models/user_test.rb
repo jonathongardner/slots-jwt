@@ -8,7 +8,7 @@ class UserTest < SlotsTest
     user = users(:another_great_user)
     assert_difference('Slots::Session.count') do
       token = user.create_token(true)
-      assert_decode_token token, user: user, extra_payload: {'session' => user.sessions.first.session}
+      assert_decode_token token, user: user, extra_payload: {}, session: user.sessions.first.session
     end
   end
 

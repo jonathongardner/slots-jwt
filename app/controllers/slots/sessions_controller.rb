@@ -13,17 +13,19 @@ module Slots
       raise Slots::AuthenticationFailed unless current_user&.authenticate?(params[:password])
 
       current_user.create_token(ActiveModel::Type::Boolean.new.cast(params[:session]))
-      render json: current_user.as_json(methods: :token), status: :accepted
+      set_token_header!
+      render json: current_user.as_json, status: :accepted
     end
 
     def sign_out
-      Slots::Session.find_by(session: jw_token.session)&.delete if jw_token.session
+      Slots::Session.find_by(session: jw_token.session)&.delete if jw_token.session.present?
       head :ok
     end
 
     def update_session_token
-      return render json: {errors: {token: ["doesn't have Session"]}}, status: :unprocessable_entity unless jw_token.session
-      render json: current_user.as_json(methods: :token), status: :accepted
+      return render json: {errors: {token: ["doesn't have Session"]}}, status: :unprocessable_entity if jw_token.session.blank?
+      set_token_header!
+      render json: current_user.as_json, status: :accepted
     end
 
     # def valid_token
