@@ -6,7 +6,7 @@ module Slots
     require_login! load_user: true, except: :confirm
     def approve
       authentication = Slots.configuration.authentication_model.find(params[:id])
-      return render json: {errors: ["can't approve"]}, status: :forbidden unless current_user.can_approve?(authentication)
+      return render json: {errors: {approve: ["not authorized"]}}, status: :forbidden unless current_user.can_approve?(authentication)
       authentication.approve!
       head :ok
     end
@@ -17,7 +17,7 @@ module Slots
         current_user.update_session if current_user.jwt.session
         render json: current_user.as_json(methods: :token), status: :ok
       else
-        render json: {errors: ["can't confirm"]}, status: :unprocessable_entity #unauthorized
+        render json: {errors: ["can't confirm"]}, status: :unprocessable_entity # unauthorized
       end
     end
 

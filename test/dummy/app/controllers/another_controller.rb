@@ -14,4 +14,5 @@ class AnotherController < ApplicationController
   end
 
   catch_invalid_token(response: {errors: {my_message: ['Some custom message']}}, status: :im_a_teapot)
+  catch_access_denied(response: {errors: {my_message: ['Another custom message']}}, status: :enhance_your_calm)
 end

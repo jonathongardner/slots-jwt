@@ -46,12 +46,12 @@ module Slots
     end
 
     def require_valid_user(confirmed: true)
-      raise Slots::InvalidToken unless current_user&.valid_user?(confirmed: confirmed)
+      raise Slots::AccessDenied unless current_user&.valid_user?(confirmed: confirmed)
     end
     def require_valid_loaded_user(confirmed: true)
       # Load user will make sure it is in the database and valid in the database
       raise Slots::InvalidToken, "User doesnt exist" unless load_user
-      raise Slots::InvalidToken unless current_user&.valid_user?(confirmed: confirmed)
+      raise Slots::AccessDenied unless current_user&.valid_user?(confirmed: confirmed)
     end
 
     def require_valid_unconfirmed_user(**options)
@@ -70,7 +70,7 @@ module Slots
         return :require_valid_loaded_user if load_user && confirmed
         return :require_valid_user if confirmed
         return :require_valid_unconfirmed_loaded_user if load_user
-        return :require_valid_unconfirmed_user
+        :require_valid_unconfirmed_user
       end
 
       def require_login!(load_user: false, confirmed: true, **options)
@@ -85,6 +85,12 @@ module Slots
 
       def catch_invalid_token(response: {errors: {authentication: ['invalid or missing token']}}, status: :unauthorized)
         rescue_from Slots::InvalidToken do |exception|
+          render json: response, status: status
+        end
+      end
+
+      def catch_access_denied(response: {errors: {authorization: ["can't access"]}}, status: :forbidden)
+        rescue_from Slots::AccessDenied do |exception|
           render json: response, status: status
         end
       end

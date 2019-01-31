@@ -16,11 +16,11 @@ class AnotherControllerTest < SlotsIntegrationTest
     assert_response_error 'my_message', 'Some custom message'
   end
 
-  test "should return im_a_teapot for another_valid_user_url when valid token and unconfirmed user" do
+  test "should return enhance_your_calm for another_valid_user_url when valid token and unconfirmed user" do
     user = users(:unconfirmed_user)
     authorized_get user, another_valid_user_url
-    assert_response_im_a_teapot
-    assert_response_error 'my_message', 'Some custom message'
+    assert_response_enhance_your_calm
+    assert_response_error 'my_message', 'Another custom message'
   end
 
   test "should return success for another_valid_user_url when valid token and user" do
@@ -48,11 +48,11 @@ class AnotherControllerTest < SlotsIntegrationTest
     assert_response :success
   end
 
-  test "should return im_a_teapot for valid_token_url when valid token and unconfirmed user" do
+  test "should return enhance_your_calm for valid_token_url when valid token and unconfirmed user" do
     user = users(:unconfirmed_user)
     authorized_get user, another_valid_token_url
-    assert_response_im_a_teapot
-    assert_response_error 'my_message', 'Some custom message'
+    assert_response_enhance_your_calm
+    assert_response_error 'my_message', 'Another custom message'
   end
 
   test "should return success with new token for expired token with valid session" do
@@ -140,6 +140,10 @@ class AnotherControllerTest < SlotsIntegrationTest
 
   def assert_response_im_a_teapot
     assert_equal response.code, '418', "Expected response to be a <418: Im A Teapot> but was a <#{response.code}>"
+  end
+
+  def assert_response_enhance_your_calm
+    assert_equal response.code, '420', "Expected response to be a <420: Enhance Your Calm> but was a <#{response.code}>"
   end
 
   def assert_new_token(current_token, **options)

@@ -36,7 +36,10 @@ module Slots
       render json: {errors: {authentication: ['login or password is invalid']}}, status: :unauthorized
     end
 
+    # TODO need to change this to use local application_controller so if
+    # the error messages are changed it will be reflected
     catch_invalid_token
+    catch_access_denied
 
     private
 

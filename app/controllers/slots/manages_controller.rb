@@ -40,6 +40,7 @@ module Slots
     end
 
     catch_invalid_token
+    catch_access_denied
     # # DELETE /manages/1
     # def destroy
     #   @manage.destroy
