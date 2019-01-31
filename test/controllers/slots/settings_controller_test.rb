@@ -5,7 +5,7 @@ module Slots
   class SettingsControllerTest < SlotsIntegrationTest
     include Engine.routes.url_helpers, Slots::Tests
 
-    test "should approve user" do
+    test "should approve and unapprove user" do
       to_approve = users(:unapproved_user)
       assert_not to_approve.approved?, 'Should not be approved'
 
@@ -14,6 +14,16 @@ module Slots
 
       authorized_get user, approve_url(to_approve.id)
       assert_response :success
+
+      to_approve.reload
+      assert to_approve.approved?, 'Should be approved'
+
+      authorized_get user, approve_url(to_approve.id, approved: false)
+
+      to_approve.reload
+      assert_not to_approve.approved?, 'Should be unapproved'
+
+      authorized_get user, approve_url(to_approve.id, approved: true)
 
       to_approve.reload
       assert to_approve.approved?, 'Should be approved'

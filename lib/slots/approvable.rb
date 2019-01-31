@@ -15,8 +15,8 @@ module Slots
       false
     end
 
-    def approve!
-      self.update!(approved: true)
+    def approve!(approved_pasted = nil)
+      self.update!(approved: approved_pasted.nil? || approved_pasted)
     end
 
     module ClassMethods

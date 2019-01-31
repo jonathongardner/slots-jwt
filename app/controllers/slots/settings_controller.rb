@@ -7,7 +7,7 @@ module Slots
     def approve
       authentication = Slots.configuration.authentication_model.find(params[:id])
       return render json: {errors: {approve: ["not authorized"]}}, status: :forbidden unless current_user.can_approve?(authentication)
-      authentication.approve!
+      authentication.approve!(params[:approved])
       head :ok
     end
 

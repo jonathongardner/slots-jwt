@@ -46,12 +46,12 @@ module Slots
     end
 
     def require_valid_user(confirmed: true)
-      raise Slots::AccessDenied unless current_user&.valid_user?(confirmed: confirmed)
+      access_denied! unless current_user&.valid_user?(confirmed: confirmed)
     end
     def require_valid_loaded_user(confirmed: true)
       # Load user will make sure it is in the database and valid in the database
       raise Slots::InvalidToken, "User doesnt exist" unless load_user
-      raise Slots::AccessDenied unless current_user&.valid_user?(confirmed: confirmed)
+      access_denied! unless current_user&.valid_user?(confirmed: confirmed)
     end
 
     def require_valid_unconfirmed_user(**options)
@@ -59,6 +59,10 @@ module Slots
     end
     def require_valid_unconfirmed_loaded_user(**options)
       require_valid_loaded_user(**options, confirmed: false)
+    end
+
+    def access_denied!
+      raise Slots::AccessDenied
     end
 
     module ClassMethods
