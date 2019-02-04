@@ -10,24 +10,22 @@ module Slots
 
     def jw_token
       return @_jw_token if @_jw_token&.valid!
-
-      if Slots.configuration.update_expired_session_tokens
-        @_jw_token = Slots::Slokens.decode(authenticate_with_http_token { |t, _| t })
-        if @_jw_token.expired? && @_jw_token.session.present? && Slots.configuration.session_lifetime
-          @_current_user = Slots.configuration.authentication_model.from_sloken(@_jw_token)
-          @_current_user&.update_session
-        end
-      else
-        @_jw_token = Slots::Slokens.decode(authenticate_with_http_token { |t, _| t })
-      end
+      @_jw_token = Slots::Slokens.decode(authenticate_with_http_token { |t, _| t })
       @_jw_token.valid!
     end
 
-    def new_session_token
+    def update_expired_session_tokens
+      return false unless Slots.configuration.session_lifetime
       @_jw_token = Slots::Slokens.decode(authenticate_with_http_token { |t, _| t })
-      return false unless @_jw_token.session.present? && Slots.configuration.session_lifetime
-      @_current_user = Slots.configuration.authentication_model.from_sloken(@_jw_token)
-      return false unless @_current_user&.update_session
+      return false unless @_jw_token.expired? && @_jw_token.session.present?
+      new_session_token
+    end
+
+    def new_session_token
+      _current_user = Slots.configuration.authentication_model.from_sloken(@_jw_token)
+      return false unless _current_user&.update_session
+      @_current_user = _current_user
+      true
     end
 
     def current_user
@@ -45,46 +43,42 @@ module Slots
       response.set_header('authorization', "Bearer token=#{current_user.token}") if current_user&.new_token?
     end
 
-    def require_valid_user(confirmed: true)
-      access_denied! unless current_user&.valid_user?(confirmed: confirmed)
+    def require_valid_user
+      access_denied! unless current_user && token_allowed?
     end
-    def require_valid_loaded_user(confirmed: true)
+    def require_valid_loaded_user
       # Load user will make sure it is in the database and valid in the database
       raise Slots::InvalidToken, "User doesnt exist" unless load_user
-      access_denied! unless current_user&.valid_user?(confirmed: confirmed)
-    end
-
-    def require_valid_unconfirmed_user(**options)
-      require_valid_user(**options, confirmed: false)
-    end
-    def require_valid_unconfirmed_loaded_user(**options)
-      require_valid_loaded_user(**options, confirmed: false)
+      require_valid_user
     end
 
     def access_denied!
       raise Slots::AccessDenied
     end
 
+    def token_allowed?
+      !(self.class._reject_token?(self))
+    end
+
     module ClassMethods
-      def new_session_token!(**options)
-        before_action :new_session_token, **options
-      end
-
-      def login_function(load_user: false, confirmed: true)
-        return :require_valid_loaded_user if load_user && confirmed
-        return :require_valid_user if confirmed
-        return :require_valid_unconfirmed_loaded_user if load_user
-        :require_valid_unconfirmed_user
-      end
-
-      def require_login!(load_user: false, confirmed: true, **options)
-        before_action login_function(load_user: load_user, confirmed: confirmed), **options
+      def update_expired_session_tokens!(**options)
+        before_action :update_expired_session_tokens, **options
         after_action :set_token_header!, **options
       end
 
-      def ignore_login!(load_user: false, confirmed: true, **options)
-        skip_before_action login_function(load_user: load_user, confirmed: confirmed), **options
-        skip_after_action :set_token_header!, **options
+      def login_function(load_user: false)
+        return :require_valid_loaded_user if load_user
+        :require_valid_user
+      end
+
+      def require_login!(load_user: false, **options)
+        before_action login_function(load_user: load_user), **options
+      end
+
+      def ignore_login!(load_user: false, **options)
+        skip_before_action login_function(load_user: load_user), **options
+        skip_before_action :update_expired_session_tokens, **options, raise: false
+        skip_after_action :set_token_header!, **options, raise: false
       end
 
       def catch_invalid_token(response: {errors: {authentication: ['invalid or missing token']}}, status: :unauthorized)
@@ -97,6 +91,13 @@ module Slots
         rescue_from Slots::AccessDenied do |exception|
           render json: response, status: status
         end
+      end
+
+      def reject_token(&block)
+        (@_reject_token ||= []).push(block)
+      end
+      def _reject_token?(con)
+        (@_reject_token ||= []).any? { |b| con.instance_eval &b }
       end
     end
   end

@@ -3,8 +3,8 @@
 require_dependency "slots/application_controller"
 module Slots
   class SessionsController < ApplicationController
-    new_session_token! only: :update_session_token
-    require_login! load_user: true, confirmed: false, only: :update_session_token
+    update_expired_session_tokens! only: :update_session_token
+    require_login! load_user: true, only: :update_session_token
     require_login! except: [:sign_in, :update_session_token]
 
     def sign_in
@@ -23,14 +23,9 @@ module Slots
     end
 
     def update_session_token
-      return render json: {errors: {token: ["doesn't have Session"]}}, status: :unprocessable_entity if jw_token.session.blank?
-      set_token_header!
+      new_session_token if Slots.configuration.session_lifetime && jw_token.session.present? && !current_user.new_token?
       render json: current_user.as_json, status: :accepted
     end
-
-    # def valid_token
-    #   render json: current_user.as_json(methods: :token), status: :accepted
-    # end
 
     rescue_from Slots::AuthenticationFailed do |exception|
       render json: {errors: {authentication: ['login or password is invalid']}}, status: :unauthorized

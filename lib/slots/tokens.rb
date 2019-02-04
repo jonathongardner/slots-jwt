@@ -46,6 +46,7 @@ module Slots
     end
 
     def update_session
+      return false unless allowed_new_token?
       session = self.sessions.matches_jwt(jwt)
       return false unless session
       old_iat = jwt.iat
@@ -69,7 +70,6 @@ module Slots
       rescue ActiveRecord::RecordNotFound
         return false
       end
-      add_logged_in(:token)
       true
     end
 

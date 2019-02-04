@@ -8,7 +8,7 @@ class UserTest < SlotsTest
     user = users(:another_great_user)
     assert_difference('Slots::Session.count') do
       token = user.create_token(true)
-      assert_decode_token token, user: user, extra_payload: {}, session: user.sessions.first.session
+      assert_decode_token token, user: user, extra_payload: {}, session: user.sessions.second.session
     end
   end
 
@@ -22,12 +22,6 @@ class UserTest < SlotsTest
       token = user.create_token(true)
       assert_decode_token token, user: user, extra_payload: {}
     end
-  end
-
-  test "unconfirmed_user should not be valid" do
-    user = users(:unconfirmed_user)
-    assert_not user.valid_user?, 'unconfirmed_user should not be valid'
-    assert user.valid_user?(confirmed: false), 'unconfirmed_user should be valid if unconfirmed: false'
   end
 
   test "sould not return password or confirmation_token when using as/to_json" do

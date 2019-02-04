@@ -13,7 +13,13 @@ an_expired_session:
   updated_at: <%= 3.weeks.ago %>
   created_at: <%= 4.weeks.ago %>
 
-unconfirmed_session:
-  session: ThisIsMyUnconfirmedSession
+another_great_session:
+  session: ThisIsMyOtherSession
   jwt_iat: <%= 2.minutes.ago.to_i %>
-  user: unconfirmed_user
+  previous_jwt_iat: <%= 3.minutes.ago.to_i %>
+  user: another_great_user
+
+weird_session:
+  session: ThisIsMyWeirdSession
+  jwt_iat: <%= 2.minutes.ago.to_i %>
+  user: weird_user

@@ -1,13 +1,9 @@
 # frozen_string_literal: true
 
-class AnotherController < ApplicationController
+class ADifferentController < ApplicationController
   update_expired_session_tokens! only: [:valid_user]
   require_login! load_user: true, only: [:valid_user]
   require_login! only: [:valid_token]
-
-  reject_token do
-    current_user.username == 'anotherusername'
-  end
 
   def valid_user
     head :ok

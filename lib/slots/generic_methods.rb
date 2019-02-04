@@ -7,32 +7,12 @@ module Slots
     included do
     end
 
-    def logged_in?
-      @_logged_in.present?
-    end
-
-    def clear_logged_in
-      @_logged_in = []
-    end
-
-    def add_logged_in(v)
-      @_logged_in ||= []
-      @_logged_in.push(v) unless @_logged_in.include?(v)
-      logged_in?
-    end
-
-    def can_loggin(approved: true)
-      return false if self.slots?(:approvable) && approved && !self.approved?
-      true
-    end
-
-    def valid_user?(confirmed: true)
-      return false if self.slots?(:confirmable) && confirmed && !self.confirmed?
-      true
+    def allowed_new_token?
+      !(self.class._reject_new_token?(self))
     end
 
     def authenticate?(password)
-      add_logged_in(:password) if self.respond_to?(:authenticate) && self.authenticate(password) && self.can_loggin
+      self.respond_to?(:authenticate) && self.authenticate(password) && self.allowed_new_token?
     end
 
     module ClassMethods
@@ -43,6 +23,13 @@ module Slots
           return self.where(lower_case).first
         end
         nil
+      end
+
+      def reject_new_token(&block)
+        (@_reject_new_token ||= []).push(block)
+      end
+      def _reject_new_token?(user)
+        (@_reject_new_token ||= []).any? { |b| user.instance_eval &b }
       end
     end
   end

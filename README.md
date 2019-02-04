@@ -3,7 +3,6 @@ Token authentication solution for rails 5 API. Slots use JSON Web Tokens for aut
 
 The current features in slots are:
 - Database Authenticatable: stores a password in the database using Secure  Password. If other methods are desired for authentication like LDAP just do not include this module and create a method `authenticate` in the model.
-- Approvable: Requires user to be approved before the account is valid.
 
 ## Getting started
 Slots 0.0.1a works with Rails 5. Add this line to your application's Gemfile:
@@ -36,6 +35,21 @@ Slots.configure do |config|
   ...
 end
 ```
+If you are using a model that has already been created than just add the following with the desired plugins:
+```ruby
+class MyModel < ApplicationRecord
+  ...
+  slots :database_authentication
+  ...
+end
+```
+And make sure the table has the necessary columns (if using the default setup that would be email and password_digest).
+
+Tokens are expected to be in the header of the request in the following format:
+```ruby
+'authorization' => 'Bearer token=TOKEN'
+```
+They are also returned in the header in the same way.
 
 ## Usage
 To require a user to be authenticated the following methods, from the AuthenticationHelper module, can be used in the controller.
@@ -43,7 +57,7 @@ To require a user to be authenticated the following methods, from the Authentica
 require_login!
 ```
 
-`require_login!` takes the usual options `before_action` (`only`, `except`) and also `load_user`.
+`require_login!` takes the usual options of a `before_action` (`only`, `except`) and also `load_user`.
   - `load_user`: a Boolean. Default is false, which means the `current_user` will be populated with the information from JWT. This can be a problem because the info in the JWT could become out of date; it would not update until the token has expired. If true `current_user` will be reloaded from the database. Default is false to help keep the JWT stateless.
 
 This method will raise a `Slots::InvalidToken` Error. This error can be caught using the helper method `catch_invalid_token`. If nothing is passed the following will be returned with a unauthorized status:
@@ -54,22 +68,62 @@ This method will raise a `Slots::InvalidToken` Error. This error can be caught u
 ```
 A custom message or status can be returned using the following:
 ```ruby
-catch_invalid_token(response: {errors: {my_message: ['Some custom message']}}, status: :im_a_teapot)
+catch_invalid_token(response: {my_message: 'Some custom message'}, status: :im_a_teapot)
 ```
-It is sometimes easier to always require login and to explicitly ignore it. To do this add `require_login!` and `catch_invalid_token` to the `ApplicationController`. Than on routes that you do not want to require authentication use the following method.
+It is sometimes easier to always require login and then explicitly ignore it when needed. To do this add `require_login!` and `catch_invalid_token` to the `ApplicationController`. Then on routes that you do not want to require authentication use the following method.
 ```ruby
 ignore_login!
 ```
 This takes all the same options as `require_login!`.
 
-The token is expected to be in the header or the request in the following format:
+To not allow a user to sign in the following can be used in the authentication model:
 ```ruby
-'authorization' => 'Bearer token=TOKEN'
+class User < ApplicationRecord
+  slots :database_authentication
+
+  reject_new_token do
+    !self.approved # Return true if they cannot get a new token
+  end
+end
 ```
+This will not allow unapproved users to get a new token (login or update_session_token).
+
+## Authorization
+Sometimes when dealing with authentication you also need authorization. While in most cases you should use another gem to handle this, if it is simple (like an admin or approved user) slots can handle it. Just add the following:
+```ruby
+class SomeController < ApplicationController
+  ...
+
+  reject_token do
+    !current_user.approved # Return true to not allowed to see resource
+  end
+
+  def some_special_action_that_you_must_be_approved_for
+  end
+
+  ...
+end
+```
+This will raise a `Slots::AccessDenied` Error for users not approved for the routes in this controller. To catch this error you can use the helper method `catch_access_denied`. If nothing is passed the following will be returned with a forbidden status:
+```
+  'errors' => {
+    'authorization' => ["can't access"]
+  }
+```
+A custom message or status can be returned using the following:
+```ruby
+catch_invalid_token(response: {my_message: 'Some custom message'}, status: :im_a_teapot)
+```
+NOTE: If you want the token to be rejected for all tokens (i.e. require all routes to have an approved user) add the above to the `ApplicationController`. You can then also add more specific requirements to a controller by also adding it in the controller like requiring an admin.
+
+## Sessions
+If sessions are allowed (`session_lifetime` is not nil) `session: true` can be passed along when signing in to recieve a session token. A session tokens has a the session id in the payload of the JWT. This is kept in the JWT so the front-end only has to track one token. There are two ways to get a new token after a session token has expired.
+  1. The first is by sending the token to `MOUNT_LOCATION/update_session_token`. This method will always return a new token even if the token has not expired. This will return the same information as `sign_in` (user information and with the token in the header).
+  2. The second is by adding `update_expired_session_tokens!` (which takes the usual options of a `before_action` `only`, `except`, etc). This method will allow any route to take a valid expired token and it will return a new token in the headers with usual route information in the body. A token will only be returned in the header if the token passed is expired. When using this method a problem can arise were two request are made at the same time with the same expired token. The first request processed would return a new token but the second request would fail because the expired token does not match the information of the session anymore (since it was just updated) and would therefore return unauthorized. To fix this there is a previous jwt lifetime (which defaults to 5 seconds and can be changed in the config). This will allow the previous token to be valid for 5 seconds (or whatever is set in config). If a previous token is sent that is within the previous lifetime it will be a valid token but it will not return a new token (since one was already returned in the earlier request).
 
 ## Testing
 
-The following methods can be used within minitest, `authorized_get`, `authorized_post`, `authorized_put`, `authorized_patch` and `authorized_delete`. These methods are the same as the usual `get`, ... `delete` but the first param in the method must be the user. For example:
+By adding `include Slots::Tests` the following methods can be used within minitest, `authorized_get`, `authorized_post`, `authorized_put`, `authorized_patch` and `authorized_delete`. These methods are the same as the usual `get`, ... `delete` but the first param in the method must be the user. For example:
 ```ruby
 authorized_get users(:some_user), some_route_url, params: {one: 'something', ...}, headers: {'info' => 'someInfo', ...}
 ```
@@ -84,7 +138,7 @@ Slots.configure do |config|
   config.secret = ENV['SLOT_SECRET']
   config.token_lifetime = 1.hour
   config.session_lifetime = 2.weeks
-  config.secret_yaml = false
+  config.previous_jwt_lifetime = 5.seconds
 end
 ```
 - `logins`: this is the column to use for logins. It must be a symbol or a hash with symbol regex pair where the symbol is the column and the regex is when to use it (hash order matters). An example might is
@@ -97,8 +151,7 @@ This would make it if a value for login is passed and it has an @ symbol than ch
 - `secret`: This is the secret used to encode the JWS.
 - `token_lifetime`: This is the lifetime of the token, it should be kept short (less than one hour).
 - `session_lifetime`: This is the session lifetime, set to nil if you do not want to use sessions.
-- `previous_jwt_lifetime`: This is the lifetime of the previous_jwt, for example if two request are sent with an expired token the first one will update the session making the second one invalid (because the iat doesn't match the session). Therefore this is to give time for all following request to use the new token.
-- `update_expired_session_tokens`: This will update and return a new token if an expired session token is used.
+- `previous_jwt_lifetime`: This is the lifetime of the previous_jwt, for example if two request are sent with an expired token the first one will update the session making the second one invalid (because the iat doesn't match the session). Therefore this is to gives time for all following request to use the new token.
 
 ## Routes
 
@@ -111,7 +164,6 @@ All these routes will be mounted at the route used above in `mount Slots::Engine
 | `slots.sign_in` | GET/POST `/sign_in` | Does not require Token | This is used to sign in. login and password are expected as params. If the credentials are valid the user is returned with the token in header in the following format: `'authorization' => 'Bearer token=TOKEN'` (same as sending) |
 | `slots.sign_out` | DELETE `/sign_out` | Requires Token | This is used to sign out. This will delete the session if one exist for the token. |
 | `slots.update_session_token` | GET `/update_session_token` | Requires Token (token can be expired). | This is used to force a new token to be returned from an expired token using the session in the JWT. The token is returned in the same way as sign_in. |
-| `slots.approve` | GET `/approve/:id` | Requires token and a user who can_approve?(:id). | This is for a user like admin to approve new users. |
 
 
 

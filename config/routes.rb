@@ -10,9 +10,4 @@ Slots::Engine.routes.draw do
   delete 'sign_out', to: 'sessions#sign_out'
   get 'update_session_token', to: 'sessions#update_session_token'
   # get 'valid_token', to: 'sessions#valid_token' TODO not sure if valid token is needed
-
-  get 'approve/:id', to: 'settings#approve', as: :approve
-
-  get 'new_confirmation_token', to: 'manages#new_confirmation_token', as: "new_confirmation_token"
-  get 'confirm', to: 'settings#confirm', as: :confirm
 end

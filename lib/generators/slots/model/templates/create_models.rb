@@ -6,9 +6,6 @@ class Create<%= name.classify.pluralize %> < ActiveRecord::Migration[5.2]
       # database_authentication
       t.string :password_digest
 
-      # approvable
-      t.boolean :approved, default: false, null: false
-
       t.timestamps
     end
   end

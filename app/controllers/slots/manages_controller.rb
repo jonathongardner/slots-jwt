@@ -1,8 +1,10 @@
+# frozen_string_literal: true
 
 require_dependency "slots/application_controller"
 module Slots
   class ManagesController < ApplicationController
-    require_login! load_user: true, except: [:create, :new_confirmation_token]
+    require_login! load_user: true, except: [:create]
+    self.class_eval &Slots.configuration.manage_callbacks
 
     # POST /manages
     def create
@@ -28,17 +30,6 @@ module Slots
       end
     end
 
-    def new_confirmation_token
-      require_valid_loaded_user(confirmed: false)
-      # This will unconfirm user if they are confirmed think about disabling this route
-      current_user.set_new_confirmation_token
-      if current_user.save
-        head :accepted
-      else
-        render json: {errors: current_user.errors}, status: :unprocessable_entity
-      end
-    end
-
     catch_invalid_token
     catch_access_denied
     # # DELETE /manages/1
@@ -52,6 +43,7 @@ module Slots
         Slots.configuration.authentication_model
       end
       def manage_columns
+        # TODO need to handle this differently
         authentication_model.column_names - ['id', 'password_digest', 'approved', 'confirmed', 'confirmation_token']
       end
 

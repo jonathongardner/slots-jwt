@@ -2,8 +2,8 @@
 
 module Slots
   class Configuration
-    attr_accessor :login_regex_validations, :token_lifetime, :session_lifetime, :update_expired_session_tokens, :previous_jwt_lifetime
-    attr_reader :logins
+    attr_accessor :login_regex_validations, :token_lifetime, :session_lifetime, :previous_jwt_lifetime
+    attr_reader :logins, :manage_callbacks
     attr_writer :authentication_model
     def initialize
       @logins = {email: //}
@@ -13,7 +13,7 @@ module Slots
       @token_lifetime = 1.hour
       @session_lifetime = 2.weeks # Set to nil if you dont want sessions
       @previous_jwt_lifetime = 5.seconds # Set to nil if you dont want sessions
-      @update_expired_session_tokens = true
+      @manage_callbacks = Proc.new { }
     end
 
     def logins=(value)
@@ -41,6 +41,10 @@ module Slots
         return secret_hash[:secret] if at > secret_hash[:created_at]
       end
       raise InvalidSecret
+    end
+
+    def manage(&block)
+      @manage_callbacks = block
     end
   end
 
