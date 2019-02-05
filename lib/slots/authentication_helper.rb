@@ -97,7 +97,11 @@ module Slots
         (@_reject_token ||= []).push(block)
       end
       def _reject_token?(con)
-        (@_reject_token ||= []).any? { |b| con.instance_eval &b }
+        (@_reject_token ||= []).any? { |b| con.instance_eval &b } || _superclass_reject_token?(con)
+      end
+
+      def _superclass_reject_token?(con)
+        self.superclass.respond_to?('_reject_token?') && self.superclass._reject_token?(con)
       end
     end
   end
