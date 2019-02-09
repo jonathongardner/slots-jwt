@@ -49,6 +49,13 @@ class AnotherControllerTest < SlotsIntegrationTest
     assert_response_im_a_teapot
     assert_response_error 'my_message', 'Some custom message'
   end
+  test "should return im_a_teapot for another_valid_user_url when invalid email in token" do
+    user = users(:some_great_user)
+    user.email = 'somethingElse@somewhere.com'
+    authorized_get user, another_valid_user_url
+    assert_response_im_a_teapot
+    assert_response_error 'my_message', 'Some custom message'
+  end
   test "should return im_a_teapot for expired token without valid session" do
     user = users(:some_great_user)
     token = create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: 2.minutes.ago, extra_payload: {})
@@ -94,6 +101,7 @@ class AnotherControllerTest < SlotsIntegrationTest
     assert_response_enhance_your_calm
   end
   #----------------another_valid_user enhance_your_calm----------------
+
 
   #----------------another_valid_token_url success----------------
   test "should return success for another_valid_token_url when valid token and user" do

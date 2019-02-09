@@ -58,7 +58,18 @@ require_login!
 ```
 
 `require_login!` takes the usual options of a `before_action` (`only`, `except`) and also `load_user`.
-  - `load_user`: a Boolean. Default is false, which means the `current_user` will be populated with the information from JWT. This can be a problem because the info in the JWT could become out of date; it would not update until the token has expired. If true `current_user` will be reloaded from the database. Default is false to help keep the JWT stateless.
+The `current_user` is populated with the information from JWT. This can be a problem because the info in the JWT could become out of date; it would not update until the token has expired. If you want to force the user to be reloaded from the database you can call `require_user_load!` or pass `load_user: true` to `require_login!`. Default is not to load the user to help keep the JWT stateless.
+
+WARNING: do not call  `require_login!` twice in one controller. For example if one route you want with load_user and one without don't do the following, because only the last one will be done.
+```ruby
+require_login! only: [:action1]
+require_login! load_user: true, only: [:action2]
+```
+This is a limitation on rails `before_action`. In the example above only `action2` will require a login. Instead use the following:
+```ruby
+require_login! only: [:action1, :action2]
+require_user_load! only: [:action2]
+```
 
 This method will raise a `Slots::InvalidToken` Error. This error can be caught using the helper method `catch_invalid_token`. If nothing is passed the following will be returned with a unauthorized status:
 ```

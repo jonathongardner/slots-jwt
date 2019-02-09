@@ -2,8 +2,8 @@
 
 class AnotherController < ApplicationController
   update_expired_session_tokens! only: [:valid_user]
-  require_login! load_user: true, only: [:valid_user]
-  require_login! only: [:valid_token]
+  require_login!
+  require_user_load! only: [:valid_user]
 
   reject_token do
     current_user.username == 'anotherusername'
