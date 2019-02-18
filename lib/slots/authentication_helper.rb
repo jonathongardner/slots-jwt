@@ -84,6 +84,12 @@ module Slots
         skip_after_action :set_token_header!, **options, raise: false
       end
 
+      def catch_invalid_login(response: {errors: {authentication: ['login or password is invalid']}}, status: :unauthorized)
+        rescue_from Slots::AuthenticationFailed do |exception|
+          render json: response, status: status
+        end
+      end
+
       def catch_invalid_token(response: {errors: {authentication: ['invalid or missing token']}}, status: :unauthorized)
         rescue_from Slots::InvalidToken do |exception|
           render json: response, status: status

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Configure Rails Environment
 ENV["RAILS_ENV"] = "test"
 
@@ -11,6 +13,11 @@ require 'bcrypt'
 # to be shown.
 Minitest.backtrace_filter = Minitest::BacktraceFilter.new
 
+class ApplicationController < ActionController::API
+  require_login!
+  catch_invalid_login
+  catch_invalid_token
+end
 
 # Load fixtures from the engine
 if ActiveSupport::TestCase.respond_to?(:fixture_path=)

@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_dependency "slots/application_controller"
 module Slots
   class ManagesController < ApplicationController
     require_login! load_user: true, except: [:create]
@@ -29,9 +28,6 @@ module Slots
         render json: {errors: current_user.errors}, status: :unprocessable_entity
       end
     end
-
-    catch_invalid_token
-    catch_access_denied
     # # DELETE /manages/1
     # def destroy
     #   @manage.destroy

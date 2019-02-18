@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
-require_dependency "slots/application_controller"
 module Slots
   class SessionsController < ApplicationController
-    update_expired_session_tokens! only: :update_session_token
-    require_login! load_user: true, only: :update_session_token
-    require_login! except: [:sign_in, :update_session_token]
+    update_expired_session_tokens! only: :update_session_token # needed if token is expired
+    require_user_load! only: :update_session_token
+    require_login! only: [:update_session_token, :sign_out]
 
     def sign_in
       @_current_user = _authentication_model.find_for_authentication(params[:login])
@@ -26,15 +25,6 @@ module Slots
       new_session_token if Slots.configuration.session_lifetime && jw_token.session.present? && !current_user.new_token?
       render json: current_user.as_json, status: :accepted
     end
-
-    rescue_from Slots::AuthenticationFailed do |exception|
-      render json: {errors: {authentication: ['login or password is invalid']}}, status: :unauthorized
-    end
-
-    # TODO need to change this to use local application_controller so if
-    # the error messages are changed it will be reflected
-    catch_invalid_token
-    catch_access_denied
 
     private
 
