@@ -3,7 +3,7 @@
 module Slots
   class Configuration
     attr_accessor :login_regex_validations, :token_lifetime, :session_lifetime, :previous_jwt_lifetime
-    attr_reader :logins, :manage_callbacks
+    attr_reader :logins
     attr_writer :authentication_model
     def initialize
       @logins = {email: //}
@@ -41,10 +41,6 @@ module Slots
         return secret_hash[:secret] if at > secret_hash[:created_at]
       end
       raise InvalidSecret
-    end
-
-    def manage(&block)
-      @manage_callbacks = block
     end
   end
 
