@@ -6,5 +6,9 @@ Rails.application.routes.draw do
 
   get 'a_different/valid_user'
   get 'a_different/valid_token'
+
+  get 'reject/action_one'
+  get 'reject/action_two'
+
   mount Slots::Engine => "/slots"
 end

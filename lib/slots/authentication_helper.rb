@@ -2,6 +2,8 @@
 
 module Slots
   module AuthenticationHelper
+    ALL = Object.new
+
     extend ActiveSupport::Concern
 
     included do
@@ -102,11 +104,20 @@ module Slots
         end
       end
 
-      def reject_token(&block)
-        (@_reject_token ||= []).push(block)
+      def reject_token(only: ALL, except: ALL, &block)
+        raise 'Cant pass both only and except' unless only == ALL || except == ALL
+        only = Array(only) if only != ALL
+        except = Array(except) if except != ALL
+
+        (@_reject_token ||= []).push([only, except, block])
       end
       def _reject_token?(con)
-        (@_reject_token ||= []).any? { |b| con.instance_eval &b } || _superclass_reject_token?(con)
+        (@_reject_token ||= []).any? { |o, e, b| _check_to_reject?(con, o, e, b) } || _superclass_reject_token?(con)
+      end
+      def _check_to_reject?(con, only, except, block)
+        return false unless only == ALL || only.any? { |o| o.to_sym == con.action_name.to_sym }
+        return false if except != ALL && except.any? { |e| e.to_sym == con.action_name.to_sym }
+        (con.instance_eval &block)
       end
 
       def _superclass_reject_token?(con)
