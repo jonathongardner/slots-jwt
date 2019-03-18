@@ -12,17 +12,23 @@ module Slots
     end
 
     def authenticate?(password)
-      self.respond_to?(:authenticate) && self.authenticate(password) && self.allowed_new_token?
+      self.persisted? && self.respond_to?(:authenticate) && self.authenticate(password) && self.allowed_new_token?
+    end
+
+    def authenticate!(password)
+      raise Slots::AuthenticationFailed unless self.authenticate?(password)
+      true
     end
 
     module ClassMethods
       def find_for_authentication(login)
+        to_return = nil
         Slots.configuration.logins.each do |k, v|
           next unless login&.match(v)
           lower_case = self.arel_table[k].lower.eq(login.downcase)
-          return self.where(lower_case).first
+          break to_return = self.where(lower_case).first
         end
-        nil
+        to_return || self.new
       end
 
       def reject_new_token(&block)
