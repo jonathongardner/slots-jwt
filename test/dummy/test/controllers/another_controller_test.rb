@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'slots_integration_test.rb'
+require 'test_helper'
 class AnotherControllerTest < SlotsIntegrationTest
   include Slots::Tests
 

@@ -10,5 +10,8 @@ Rails.application.routes.draw do
   get 'reject/action_one'
   get 'reject/action_two'
 
+  get 'ignore/action_one'
+  get 'ignore/action_two'
+
   mount Slots::Engine => "/slots"
 end

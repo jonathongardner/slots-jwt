@@ -48,12 +48,15 @@ module Slots
     def require_valid_user
       # Load user will make sure it is in the database and valid in the database
       raise Slots::InvalidToken, "User doesnt exist" if @_require_load_user && !load_user
-      access_denied! unless current_user && token_allowed?
+      access_denied! unless current_user && (@_ignore_callbacks || token_allowed?)
     end
     def require_load_user
-      # Use varaible so that if this action is prepended it will still onyl be called when checking for valid user,
+      # Use varaible so that if this action is prepended it will still only be called when checking for valid user,
       # i.e. so its not called before update_expired_session_tokens if set
       @_require_load_user = true
+    end
+    def ignore_callbacks
+      @_ignore_callbacks = true
     end
 
     def access_denied!
@@ -77,6 +80,10 @@ module Slots
 
       def require_user_load!(**options)
         prepend_before_action :require_load_user, **options
+      end
+
+      def skip_callback!(**options)
+        prepend_before_action :ignore_callbacks, **options
       end
 
       def ignore_login!(**options)

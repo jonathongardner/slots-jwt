@@ -5,6 +5,7 @@ module Slots
     update_expired_session_tokens! only: :update_session_token # needed if token is expired
     require_user_load! only: :update_session_token
     require_login! only: [:update_session_token, :sign_out]
+    skip_callback!
 
     def sign_in
       @_current_user = _authentication_model.find_for_authentication(params[:login])
