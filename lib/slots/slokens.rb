@@ -11,6 +11,7 @@ module Slots
         @authentication_model_values = authentication_record.as_json
         @extra_payload = extra_payload.as_json
         @session = session
+        update_exp_iat
         encode()
         @valid = true
       else
@@ -37,7 +38,16 @@ module Slots
       self
     end
 
-    def update_token
+    def update_token_data(authentication_record, extra_payload)
+      @authentication_model_values = authentication_record.as_json
+      @extra_payload = extra_payload.as_json
+      encode
+    end
+
+    def update_token(authentication_record, extra_payload)
+      @authentication_model_values = authentication_record.as_json
+      @extra_payload = extra_payload.as_json
+      update_exp_iat
       encode
     end
 
@@ -62,9 +72,11 @@ module Slots
       def secret
         Slots.configuration.secret(@iat)
       end
-      def encode
+      def update_exp_iat
         @exp = Slots.configuration.token_lifetime.from_now.to_i
         @iat = Time.now.to_i
+      end
+      def encode
         @token = JWT.encode self.payload, secret, 'HS256'
         @expired = false
         @valid = true

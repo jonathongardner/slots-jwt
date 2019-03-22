@@ -12,8 +12,7 @@ module Slots
 
       current_user.authenticate!(params[:password])
 
-      current_user.create_token(ActiveModel::Type::Boolean.new.cast(params[:session]))
-      set_token_header!
+      new_token!(ActiveModel::Type::Boolean.new.cast(params[:session]))
       render json: current_user.as_json, status: :accepted
     end
 

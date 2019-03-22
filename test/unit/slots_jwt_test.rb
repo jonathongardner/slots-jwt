@@ -59,4 +59,33 @@ class SlotsJwtTest < SlotsTest
       Slots::Slokens.decode(create_token('my0ther$ecr3t', identifier: id, exp: 2.minute.from_now.to_i, iat: 2.minute.ago.to_i)).valid!
     end
   end
+
+  def creat_old_jws
+    exp = 2.minute.from_now.to_i
+    iat = 2.minute.ago.to_i
+    token = create_token(user: {'id' => 'SomeIdentifier'}.as_json, exp: exp, iat: iat, extra_payload: {'something_else' => 47}.as_json)
+    jws = Slots::Slokens.decode(token)
+    assert_decode_token jws.token, user: {'id' => 'SomeIdentifier'}, exp: exp, iat: iat, extra_payload: {'something_else' => 47}
+    return jws, exp, iat
+  end
+  test "should update token with new data, iat, and exp" do
+    jws, exp, iat = creat_old_jws
+
+    user = {'id' => 'SomeNewIdentifier'}
+    extra_payload = {'something_else_else' => 37}
+    jws.update_token(user, extra_payload)
+    assert_decode_token jws.token, user: user, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload
+    assert_not_equal exp, jws.exp
+    assert_not_equal iat, jws.iat
+  end
+  test "should update token data with new data" do
+    jws, exp, iat = creat_old_jws
+
+    user = {'id' => 'SomeNewIdentifier'}
+    extra_payload = {'something_else_else' => 37}
+    jws.update_token_data(user, extra_payload)
+    assert_decode_token jws.token, user: user, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload
+    assert_equal exp, jws.exp
+    assert_equal iat, jws.iat
+  end
 end

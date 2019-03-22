@@ -67,6 +67,16 @@ module Slots
       !(self.class._reject_token?(self))
     end
 
+    def new_token!(session)
+      current_user.create_token(session)
+      set_token_header!
+    end
+
+    def update_token!
+      current_user.valid_in_database?
+      current_user.update_token
+    end
+
     module ClassMethods
       def update_expired_session_tokens!(**options)
         prepend_before_action :update_expired_session_tokens, **options
