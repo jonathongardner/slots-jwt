@@ -32,6 +32,51 @@ class SlotsJwtTest < SlotsTest
     jws = Slots::Slokens.encode(user, extra_payload)
     assert_decode_token jws.token, user: user, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload, secret: new_secret
   end
+  test "should raise error for bad data in yaml" do
+    error_raised_with_messege(Errno::ENOENT, "No such file or directory @ rb_sysopen - #{Slots.secret_yaml_file}") do
+      Slots.configure do |config|
+        config.secret_yaml = true
+      end
+    end
+    error_raised_with_messege(ArgumentError, "Need SECRET") do
+      copy_to_config(Rails.root.join('..', 'data', 'missing_secret_secret.yml'))
+      Slots.configure do |config|
+        config.secret_yaml = true
+      end
+    end
+    error_raised_with_messege(ArgumentError, "Need CREATED_AT") do
+      copy_to_config(Rails.root.join('..', 'data', 'missing_created_at_secret.yml'))
+      Slots.configure do |config|
+        config.secret_yaml = true
+      end
+    end
+    error_raised_with_messege(ArgumentError, "CREATED_AT must be newest to latest") do
+      copy_to_config(Rails.root.join('..', 'data', 'out_of_order_secret.yml'))
+      Slots.configure do |config|
+        config.secret_yaml = true
+      end
+    end
+  end
+  test "should encode using correct date from yaml" do
+    copy_to_config(Rails.root.join('..', 'data', 'good_secret.yml'))
+    Slots.configure do |config|
+      config.secret_yaml = true
+    end
+
+    hash = {session: '', exp: 1.minute.from_now.to_i, user: {}}
+    to_old_iat = 1553294000
+    old_iat = 1553294001
+    new_iat = 1553295500
+
+    assert_sloken_not_decode create_token('old_secret', iat: to_old_iat, **hash), 'Should not decode to old iat with old secret'
+    assert_sloken_not_decode create_token('new_secret', iat: to_old_iat, **hash), 'Should not decode to old iat with new secret'
+
+    assert_sloken_decode create_token('old_secret', iat: old_iat, **hash), 'Should decode old iat with old secret'
+    assert_sloken_not_decode create_token('new_secret', iat: old_iat, **hash), 'Should not decode old iat with new secret'
+
+    assert_sloken_not_decode create_token('old_secret', iat: new_iat, **hash), 'Should not decode new iat with old secret'
+    assert_sloken_decode create_token('new_secret', iat: new_iat, **hash), 'Should decode new iat with new secret'
+  end
   test "should raise error for invalid token" do
     id = 'SomeIdentifier'
     error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
@@ -87,5 +132,17 @@ class SlotsJwtTest < SlotsTest
     assert_decode_token jws.token, user: user, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload
     assert_equal exp, jws.exp
     assert_equal iat, jws.iat
+  end
+
+  def copy_to_config(file)
+    FileUtils.cp(file, Slots.secret_yaml_file)
+  end
+
+  def assert_sloken_decode(token, message)
+    assert(Slots::Slokens.decode(token).valid?, message)
+  end
+
+  def assert_sloken_not_decode(token, message)
+    assert_not(Slots::Slokens.decode(token).valid?, message)
   end
 end

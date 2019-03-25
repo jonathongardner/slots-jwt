@@ -1,10 +1,13 @@
 # frozen_string_literal: true
+require 'yaml'
 
 module Slots
   class Configuration
     attr_accessor :login_regex_validations, :token_lifetime, :session_lifetime, :previous_jwt_lifetime
     attr_reader :logins
     attr_writer :authentication_model
+
+    # raise_no_error is used for rake to load
     def initialize
       @logins = {email: //}
       @login_regex_validations = true
@@ -36,6 +39,22 @@ module Slots
       @secret_keys = [{created_at: 0, secret: v}]
     end
 
+    def secret_yaml=(file_path_string)
+      secret_keys = YAML.load_file(Slots.secret_yaml_file)
+      @secret_keys = []
+      secret_keys.each do |secret_key|
+        raise ArgumentError, 'Need CREATED_AT' unless (created_at = secret_key['CREATED_AT']&.to_i)
+        raise ArgumentError, 'Need SECRET' unless (secret = secret_key['SECRET'])
+        previous_created_at = @secret_keys[-1]&.dig(:created_at) || Time.now.to_i
+
+        raise ArgumentError, 'CREATED_AT must be newest to latest' unless previous_created_at > created_at
+        @secret_keys.push(
+          created_at: created_at,
+          secret: secret
+        )
+      end
+    end
+
     def secret(at = Time.now.to_i)
       @secret_keys.each do |secret_hash|
         return secret_hash[:secret] if at > secret_hash[:created_at]
@@ -53,6 +72,10 @@ module Slots
 
     def configure
       yield configuration
+    end
+
+    def secret_yaml_file
+      Rails.root.join('config', 'slots_secrets.yml')
     end
   end
 end

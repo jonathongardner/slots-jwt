@@ -5,10 +5,12 @@ module SlotsTestHelper
   def setup
     ENV['SLOT_SECRET'] = 'my$ecr3t'
     Slots.configuration = nil # Reset to default configuration
+    File.delete(Slots.secret_yaml_file) if File.exist?(Slots.secret_yaml_file)
   end
   def teardown
     ENV['SLOT_SECRET'] = 'my$ecr3t'
     Slots.configuration = nil # Reset to default configuration
+    File.delete(Slots.secret_yaml_file) if File.exist?(Slots.secret_yaml_file)
   end
   def error_raised_with_messege(error, error_message)
     begin
