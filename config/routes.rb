@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 user_model = Slots.configuration.authentication_model&.name&.underscore || ""
 Slots::Engine.routes.draw do
   get 'sign_in', to: 'sessions#sign_in'

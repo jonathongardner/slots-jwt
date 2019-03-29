@@ -2,7 +2,6 @@
 
 require 'slots_test'
 class SlotsJwtTest < SlotsTest
-
   test "should decode valid token" do
     user = {'id' => 'SomeIdentifier'}
     exp = 1.minute.from_now.to_i

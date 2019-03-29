@@ -37,7 +37,7 @@ module Slots
 
     # module Controller
     #   extended do
-        # include Slots::AuthenticationHelper
+    # include Slots::AuthenticationHelper
     #   end
     # end
   end

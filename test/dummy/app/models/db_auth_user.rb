@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class DbAuthUser < ApplicationRecord
   slots :database_authentication
 
