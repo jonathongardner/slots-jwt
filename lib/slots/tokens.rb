@@ -62,7 +62,14 @@ module Slots
     def update_token
       # This will only update the data in the token
       # not the experation data or anything else
+      return false unless valid_in_database?
+      return false unless allowed_new_token?
+
+      session = self.sessions.matches_jwt(jwt)
+      old_iat = jwt.iat
       jwt.update_token_data(self, extra_payload)
+      # Dont worry if session isnt there because exp not updated
+      session&.update(previous_jwt_iat: old_iat, jwt_iat: jwt.iat)
       @new_token = true
     end
 

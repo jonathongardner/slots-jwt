@@ -19,8 +19,9 @@ module Slots
     end
 
     def authorized_protocal(type, current_user, url, params: {}, headers: {}, session: false)
-      @token = current_user.create_token(session)
-      send(type, url, params: params, headers: headers.merge(token_header(@token)))
+      @token = current_user&.create_token(session)
+      headers = headers.merge(token_header(@token)) if @token
+      send(type, url, params: params, headers: headers)
     end
 
     def current_token

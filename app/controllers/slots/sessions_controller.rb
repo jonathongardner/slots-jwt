@@ -22,7 +22,8 @@ module Slots
     end
 
     def update_session_token
-      new_session_token if Slots.configuration.session_lifetime && jw_token.session.present? && !current_user.new_token?
+      # TODO think about not allowing user to get new token here because then there
+      current_user.update_token unless current_user.new_token?
       render json: current_user.as_json, status: :accepted
     end
 

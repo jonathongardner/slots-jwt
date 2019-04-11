@@ -130,7 +130,7 @@ class SlotsJwtTest < SlotsTest
     jws.update_token_data(user, extra_payload)
     assert_decode_token jws.token, user: user, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload
     assert_equal exp, jws.exp
-    assert_equal iat, jws.iat
+    assert iat < jws.iat, 'iat should be updated to a newer time'
   end
 
   def copy_to_config(file)

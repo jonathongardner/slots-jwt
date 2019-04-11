@@ -179,16 +179,6 @@ class AnotherControllerTest < SlotsIntegrationTest
     assert_equal '420', response.code, "Expected response to be a <420: Enhance Your Calm> but was a <#{response.code}>"
   end
 
-  def assert_new_token(current_token, **options)
-    assert returned_token, 'Should return a token'
-    assert current_token != returned_token, 'Should return a new token'
-    assert_decode_token returned_token, **options
-  end
-
-  def assert_no_new_token
-    assert_nil response.headers['authorization'], 'authorization should not be returned if token is not expired'
-  end
-
   def user_session_expired_token(sym = [:some_great_user, :a_great_session])
     # TODO WHY am I passing an array???
     user = users(sym[0])
