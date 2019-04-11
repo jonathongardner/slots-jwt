@@ -45,7 +45,9 @@ module Slots
     end
 
     def update_session
+      return false unless valid_in_database?
       return false unless allowed_new_token?
+      # Need to check if allowed new token after loading
       session = self.sessions.matches_jwt(jwt)
       return false unless session
       old_iat = jwt.iat

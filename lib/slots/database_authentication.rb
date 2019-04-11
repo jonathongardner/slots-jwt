@@ -8,6 +8,7 @@ module Slots
       has_secure_password
     end
 
+    # TODO allow super
     def as_json(*)
       super.except('password_digest')
     end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require 'slots_integration_test.rb'
 class AnotherControllerTest < SlotsIntegrationTest
   include Slots::Tests
 
@@ -45,7 +45,7 @@ class AnotherControllerTest < SlotsIntegrationTest
     assert_response_error 'my_message', 'Some custom message'
   end
   test "should return im_a_teapot for another_valid_user_url when valid token and invalid user" do
-    get another_valid_user_url, headers: token_header(create_token(user: {id: 0}, exp: 1.minute.from_now.to_i, iat: 2.minute.ago.to_i, extra_payload: {}))
+    get another_valid_user_url, headers: invalid_token
     assert_response_im_a_teapot
     assert_response_error 'my_message', 'Some custom message'
   end
@@ -110,7 +110,7 @@ class AnotherControllerTest < SlotsIntegrationTest
     assert_response :success
   end
   test "should return success for another_valid_token_url when valid token and invalid user" do
-    get another_valid_token_url, headers: token_header(create_token(user: {id: 0, username: 'notweird'}, exp: 1.minute.from_now.to_i, iat: 2.minute.ago.to_i, session: '', extra_payload: {}))
+    get another_valid_token_url, headers: invalid_token
     assert_response :success
   end
   #----------------another_valid_token_url success----------------
@@ -139,6 +139,38 @@ class AnotherControllerTest < SlotsIntegrationTest
   end
   #----------------another_valid_token_url enhance_your_calm----------------
 
+  #----------------another_valid_token_with_update_expired_url success----------------
+  test "should return success for another_valid_token_with_update_expired_url when valid token and user" do
+    user = users(:some_great_user)
+    authorized_get user, another_valid_token_with_update_expired_url
+    assert_response :success
+  end
+  test "should return success for another_valid_token_with_update_expired when valid token and invalid user" do
+    get another_valid_token_with_update_expired_url, headers: invalid_token
+    assert_response :success
+  end
+  #----------------another_valid_token_with_update_expired_url success----------------
+
+  #----------------another_valid_token_with_update_expired_url im_a_teapot----------------
+  test "should return im_a_teapot for another_valid_token_with_update_expired_url when expired valid token and invalid user" do
+    session = slots_sessions(:a_great_session)
+    get another_valid_token_with_update_expired_url, headers: invalid_token(exp: 1.minute.ago.to_i, iat: session.jwt_iat, session: session.session)
+    assert_response_im_a_teapot
+    assert_no_new_token
+  end
+  test "should return im_a_teapot for another_valid_token_with_update_expired_url when expired valid token, valid user but cant get new token" do
+    _, _, token = user_session_expired_token([:weird_user, :weird_session])
+    get another_valid_token_with_update_expired_url, headers: token_header(token)
+    assert_response_im_a_teapot
+    assert_no_new_token
+  end
+  #----------------another_valid_token_with_update_expired_url im_a_teapot----------------
+
+  def invalid_token(user: nil, exp: 1.minute.from_now.to_i, iat: 2.minute.ago.to_i, session:'')
+    user ||= users(:some_great_user)
+    token_header(create_token(user: {id: user.id, username: 'notweird'}, exp: exp, iat: iat, session: session, extra_payload: {}))
+  end
+
   def assert_response_im_a_teapot
     assert_equal '418', response.code, "Expected response to be a <418: Im A Teapot> but was a <#{response.code}>"
   end
@@ -158,6 +190,7 @@ class AnotherControllerTest < SlotsIntegrationTest
   end
 
   def user_session_expired_token(sym = [:some_great_user, :a_great_session])
+    # TODO WHY am I passing an array???
     user = users(sym[0])
     session = slots_sessions(sym[1])
     token = create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: session.jwt_iat, session: session.session, extra_payload: {})

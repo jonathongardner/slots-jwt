@@ -3,6 +3,7 @@
 Rails.application.routes.draw do
   get 'another/valid_user'
   get 'another/valid_token'
+  get 'another/valid_token_with_update_expired'
 
   get 'a_different/valid_user'
   get 'a_different/valid_token'

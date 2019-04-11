@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class AnotherController < ApplicationController
-  update_expired_session_tokens! only: [:valid_user]
+  update_expired_session_tokens! only: [:valid_user, :valid_token_with_update_expired]
   require_login!
   require_user_load! only: [:valid_user]
 
@@ -14,6 +14,10 @@ class AnotherController < ApplicationController
   end
 
   def valid_token
+    head :ok
+  end
+
+  def valid_token_with_update_expired
     head :ok
   end
 

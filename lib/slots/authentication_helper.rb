@@ -37,7 +37,7 @@ module Slots
       @_current_user ||= current_user
     end
     def load_user
-      current_user&.valid_in_database?
+      current_user&.valid_in_database? && current_user.allowed_new_token?
     end
 
     def set_token_header!
@@ -73,7 +73,6 @@ module Slots
     end
 
     def update_token!
-      current_user.valid_in_database?
       current_user.update_token
     end
 
