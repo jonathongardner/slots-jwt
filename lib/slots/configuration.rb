@@ -60,7 +60,7 @@ module Slots
       @secret_keys.each do |secret_hash|
         return secret_hash[:secret] if at > secret_hash[:created_at]
       end
-      raise InvalidSecret
+      raise InvalidSecret, 'Invalid Secret'
     end
   end
 

@@ -6,7 +6,8 @@ module Slots
     attr_reader :token, :exp, :iat, :extra_payload, :authentication_model_values, :session
     def initialize(decode: false, encode: false, token: nil, authentication_record: nil, extra_payload: nil, session: nil)
       if decode
-        decode(token)
+        @token = token
+        decode()
       elsif encode
         @authentication_model_values = authentication_record.as_json
         @extra_payload = extra_payload.as_json
@@ -84,8 +85,7 @@ module Slots
         @valid = true
       end
 
-      def decode(token)
-        @token = token
+      def decode
         begin
           set_payload
           JWT.decode @token, secret, true, verify_iat: true, algorithm: 'HS256'

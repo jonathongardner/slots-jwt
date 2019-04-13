@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'test_helper'
-class ADifferentControllerTest < ActionDispatch::IntegrationTest
+require 'slots_integration_test'
+class ADifferentControllerTest < SlotsIntegrationTest
   include Slots::Tests
 
   test "should return success for a_different_valid_user_url when valid token and another_great_user" do

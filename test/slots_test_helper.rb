@@ -40,6 +40,11 @@ module SlotsTestHelper
   def create_token(secret = 'my$ecr3t', **payload)
     JWT.encode payload, secret, 'HS256'
   end
+  def assert_valid_sloken(token, secret: 'my$ecr3t')
+    assert_singleton_method(Slots.configuration, :secret, to_return: secret) do
+      assert Slots::Slokens.decode(token), 'Should decode sloken'
+    end
+  end
   def assert_decode_token(token, secret: 'my$ecr3t', user: nil, exp: nil, iat: nil, session: nil, extra_payload: nil)
     begin
       payload_array = JWT.decode token, secret, true, verify_iat: true, algorithm: 'HS256'
@@ -58,5 +63,36 @@ module SlotsTestHelper
     rescue JWT::DecodeError
       assert false, 'Token should not have decoding error'
     end
+  end
+
+  #-------------------Refactored---------------------
+  def assert_method(object_to_stub, method, message = nil, to_return: nil, count: 1)
+    unbound_method = object_to_stub.instance_method(method)
+    method_call_count = 0
+    object_to_stub.define_method(method) do |*|
+      method_call_count += 1
+      to_return
+    end
+    yield
+    object_to_stub.define_method(method, unbound_method)
+  end
+
+  def assert_singleton_method(object_to_stub, method, message = nil, to_return: nil, count: 1, with: nil)
+    unbound_method = object_to_stub.method(method)
+    method_call_count = 0
+    passed_options = nil
+    object_to_stub.define_singleton_method(method) do |*options|
+      passed_options = options
+      method_call_count += 1
+      to_return
+    end
+    yield
+    object_to_stub.define_singleton_method(method, &unbound_method)
+    assert_equal [*with], passed_options, "Method should recieve params #{with}" if with
+    assert_equal count, method_call_count, message || "Method should only be called #{count} #{'time'.pluralize(count)}"
+  end
+
+  def copy_to_config(file)
+    FileUtils.cp(file, Slots.secret_yaml_file)
   end
 end

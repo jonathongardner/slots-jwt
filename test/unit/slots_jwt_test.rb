@@ -14,6 +14,21 @@ class SlotsJwtTest < SlotsTest
     assert_equal exp, jws.exp, 'exp should be equal to encoded exp'
     assert_equal iat, jws.iat, 'iat should be equal to encoded iat'
   end
+  test "should decode valid token using config secret" do
+    new_secret = 'my0ther$ecr3t'
+    user = {'id' => 'SomeIdentifier'}
+    exp = 1.minute.from_now.to_i
+    iat = 1.minute.ago.to_i
+
+    assert_singleton_method(Slots.configuration, :secret, to_return: new_secret) do
+      jws = Slots::Slokens.decode(create_token(new_secret, exp: exp, iat: iat, extra_payload: {}, user: user, session: ''))
+
+      assert jws.valid?, 'Token should be valid'
+      assert_equal user, jws.authentication_model_values, 'Identifer should be equal to encoded identifier'
+      assert_equal exp, jws.exp, 'exp should be equal to encoded exp'
+      assert_equal iat, jws.iat, 'iat should be equal to encoded iat'
+    end
+  end
   test "should encode valid token" do
     user = {'id' => 'SomeIdentifier'}
     extra_payload = {'something_else' => 47}
@@ -22,98 +37,63 @@ class SlotsJwtTest < SlotsTest
   end
   test "should encode using config secret" do
     new_secret = 'my0ther$ecr3t'
-    Slots.configure do |config|
-      config.secret = new_secret
-    end
     user = {'id' => 'SomeIdentifier'}
     extra_payload = {'something_else' => 47}
 
-    jws = Slots::Slokens.encode(user, extra_payload)
-    assert_decode_token jws.token, user: user, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload, secret: new_secret
-  end
-  test "should raise error for bad data in yaml" do
-    error_raised_with_messege(Errno::ENOENT, "No such file or directory @ rb_sysopen - #{Slots.secret_yaml_file}") do
-      Slots.configure do |config|
-        config.secret_yaml = true
-      end
-    end
-    error_raised_with_messege(ArgumentError, "Need SECRET") do
-      copy_to_config(Rails.root.join('..', 'data', 'missing_secret_secret.yml'))
-      Slots.configure do |config|
-        config.secret_yaml = true
-      end
-    end
-    error_raised_with_messege(ArgumentError, "Need CREATED_AT") do
-      copy_to_config(Rails.root.join('..', 'data', 'missing_created_at_secret.yml'))
-      Slots.configure do |config|
-        config.secret_yaml = true
-      end
-    end
-    error_raised_with_messege(ArgumentError, "CREATED_AT must be newest to latest") do
-      copy_to_config(Rails.root.join('..', 'data', 'out_of_order_secret.yml'))
-      Slots.configure do |config|
-        config.secret_yaml = true
-      end
+    assert_singleton_method(Slots.configuration, :secret, to_return: new_secret) do
+      jws = Slots::Slokens.encode(user, extra_payload)
+      assert_decode_token jws.token, user: user, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload, secret: new_secret
     end
   end
-  test "should encode using correct date from yaml" do
-    copy_to_config(Rails.root.join('..', 'data', 'good_secret.yml'))
-    Slots.configure do |config|
-      config.secret_yaml = true
-    end
 
+  test "should pass iat to decode token" do
     hash = {session: '', exp: 1.minute.from_now.to_i, user: {}}
-    to_old_iat = 1553294000
-    old_iat = 1553294001
-    new_iat = 1553295500
+    old_iat = 1553294000
+    old_token = create_token(iat: old_iat, **hash)
+    assert_singleton_method(Slots.configuration, :secret, to_return: 'my$ecr3t', with: old_iat) do
+      Slots::Slokens.decode(old_token)
+    end
 
-    assert_sloken_not_decode create_token('old_secret', iat: to_old_iat, **hash), 'Should not decode to old iat with old secret'
-    assert_sloken_not_decode create_token('new_secret', iat: to_old_iat, **hash), 'Should not decode to old iat with new secret'
-
-    assert_sloken_decode create_token('old_secret', iat: old_iat, **hash), 'Should decode old iat with old secret'
-    assert_sloken_not_decode create_token('new_secret', iat: old_iat, **hash), 'Should not decode old iat with new secret'
-
-    assert_sloken_not_decode create_token('old_secret', iat: new_iat, **hash), 'Should not decode new iat with old secret'
-    assert_sloken_decode create_token('new_secret', iat: new_iat, **hash), 'Should decode new iat with new secret'
+    new_iat = 1553295000
+    new_token = create_token(iat: new_iat, **hash)
+    assert_singleton_method(Slots.configuration, :secret, to_return: 'my$ecr3t', with: new_iat) do
+      Slots::Slokens.decode(new_token)
+    end
   end
+
   test "should raise error for invalid token" do
-    id = 'SomeIdentifier'
-    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
-      Slots::Slokens.decode(create_token(identifier: id, exp: 2.minute.from_now.to_i)).valid!
+    jws, _, _ = creat_valid_jws
+
+    assert_singleton_method(jws, :valid?, to_return: false) do
+      error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
+        jws.valid!
+      end
     end
-    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
-      Slots::Slokens.decode(create_token(identifier: id, iat: 2.minute.ago.to_i)).valid!
-    end
-    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
-      Slots::Slokens.decode(create_token(exp: 2.minute.from_now.to_i, iat: 2.minute.ago.to_i)).valid!
-    end
-    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
-      Slots::Slokens.decode('FakeToken').valid!
-    end
-    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
-      Slots::Slokens.decode("FakeToken.#{Base64.encode64('{]')}.cool").valid!
-    end
-    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
-      Slots::Slokens.decode("FakeToken.#{Base64.encode64('[]')}.cool").valid!
-    end
-    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
-      Slots::Slokens.decode(create_token(identifier: id, exp: 2.minute.ago.to_i, iat: 2.minute.ago.to_i)).valid!
-    end
-    error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
-      Slots::Slokens.decode(create_token('my0ther$ecr3t', identifier: id, exp: 2.minute.from_now.to_i, iat: 2.minute.ago.to_i)).valid!
+
+    assert_singleton_method(jws, :valid?, to_return: true) do
+      jws.valid!
     end
   end
 
-  def creat_old_jws
-    exp = 2.minute.from_now.to_i
-    iat = 2.minute.ago.to_i
-    token = create_token(user: {'id' => 'SomeIdentifier'}.as_json, exp: exp, iat: iat, extra_payload: {'something_else' => 47}.as_json)
-    jws = Slots::Slokens.decode(token)
-    assert_decode_token jws.token, user: {'id' => 'SomeIdentifier'}, exp: exp, iat: iat, extra_payload: {'something_else' => 47}
-    return jws, exp, iat
+  test "should not decode token" do
+    refute Slots::Slokens.decode('FakeToken').valid?, 'Should return false for token not formatted correctly'
+    refute Slots::Slokens.decode("FakeToken.#{Base64.encode64('{]')}.cool").valid?, 'Should return false for json not valid'
+    refute Slots::Slokens.decode("FakeToken.#{Base64.encode64('[]')}.cool").valid?, 'Should return false for none hash'
+
+    refute create_jws(valid_hash(iat: '')).valid?, 'Should return false for bad iat'
+    refute create_jws(valid_hash.except(:iat)).valid?, 'Should return false for missing iat'
+    refute create_jws(valid_hash(exp: 1.minute.ago.to_i)).valid?, 'Should return false for exp'
+    refute create_jws(valid_hash(exp: '')).valid?, 'Should return false for bad exp'
+    refute create_jws(valid_hash.except(:exp)).valid?, 'Should return false for missing exp'
+
+    refute create_jws(valid_hash.except(:user)).valid?, 'Should return false for missing user'
+    refute create_jws(valid_hash.except(:session)).valid?, 'Should return false for missing session'
+
+    assert create_jws(valid_hash).valid?, 'Should crete valid token'
   end
+
   test "should update token with new data, iat, and exp" do
-    jws, exp, iat = creat_old_jws
+    jws, exp, iat = creat_valid_jws
 
     user = {'id' => 'SomeNewIdentifier'}
     extra_payload = {'something_else_else' => 37}
@@ -122,8 +102,9 @@ class SlotsJwtTest < SlotsTest
     assert_not_equal exp, jws.exp
     assert_not_equal iat, jws.iat
   end
+
   test "should update token data with new data" do
-    jws, exp, iat = creat_old_jws
+    jws, exp, iat = creat_valid_jws
 
     user = {'id' => 'SomeNewIdentifier'}
     extra_payload = {'something_else_else' => 37}
@@ -133,15 +114,19 @@ class SlotsJwtTest < SlotsTest
     assert iat < jws.iat, 'iat should be updated to a newer time'
   end
 
-  def copy_to_config(file)
-    FileUtils.cp(file, Slots.secret_yaml_file)
+  def create_jws(hash)
+    Slots::Slokens.decode(create_token(**hash))
   end
 
-  def assert_sloken_decode(token, message)
-    assert(Slots::Slokens.decode(token).valid?, message)
+  def valid_hash(**hash)
+    {exp: 2.minute.from_now.to_i, iat: 2.minute.ago.to_i, user: {}, session: ''}.merge(hash)
   end
 
-  def assert_sloken_not_decode(token, message)
-    assert_not(Slots::Slokens.decode(token).valid?, message)
+  def creat_valid_jws(exp: 2.minute.from_now.to_i, iat: 2.minute.ago.to_i, session: '')
+    user = {'id' => 'SomeIdentifier'}
+    extra_payload = {'something_else' => 47}
+    jws = create_jws(user: user.as_json, exp: exp, iat: iat, session: session, extra_payload: extra_payload.as_json)
+    jws.valid!
+    return jws, exp, iat
   end
 end

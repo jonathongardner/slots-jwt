@@ -3,6 +3,10 @@
 class GenericUser < ApplicationRecord
   include Slots::GenericMethods
 
+  reject_new_token do
+    username == 'badUsername@thisdontwork'
+  end
+
   def authenticate(password)
     password == self.class.pass ? self : false
   end

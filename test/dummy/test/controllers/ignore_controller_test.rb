@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'slots_integration_test.rb'
+require 'slots_integration_test'
 class IgnoreControllerTest < SlotsIntegrationTest
   include Slots::Tests
 
