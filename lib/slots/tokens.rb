@@ -25,6 +25,7 @@ module Slots
         @new_session.save!
       end
       @new_token = true
+      run_token_created_callback
       token
     end
 

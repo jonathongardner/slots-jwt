@@ -11,6 +11,10 @@ module Slots
       !(self.class._reject_new_token?(self))
     end
 
+    def run_token_created_callback
+      self.class._token_created_callback(self)
+    end
+
     def authenticate?(password)
       password.present? && persisted? && respond_to?(:authenticate) && authenticate(password) && allowed_new_token?
     end
@@ -34,6 +38,13 @@ module Slots
       end
       def _reject_new_token?(user)
         (@_reject_new_token ||= []).any? { |b| user.instance_eval &b }
+      end
+
+      def token_created_callback(&block)
+        (@_token_created_callback ||= []).push(block)
+      end
+      def _token_created_callback(user)
+        (@_token_created_callback ||= []).each { |b| user.instance_eval &b }
       end
     end
   end
