@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'byebug'
-
 namespace :slots do
   desc "Creates or prepends secret in config/lots_secrets.yml"
   task :new_secret do
