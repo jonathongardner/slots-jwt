@@ -2,7 +2,7 @@
 Token authentication solution for rails 5 API. Slots use JSON Web Tokens for authentication and database session for remembering signed in users.
 
 ## Getting started
-Slots 0.0.1 works with Rails 5. Add this line to your application's Gemfile:
+Slots 0.0.4 works with Rails 5. Add this line to your application's Gemfile:
 
 ```ruby
 gem 'slots'
@@ -106,10 +106,10 @@ class SomeController < ApplicationController
   ...
 
   reject_token do
-    !current_user.approved # Return true to not allowed to see resource
+    !current_user.admin # Return true to not allow to see resource
   end
 
-  def some_special_action_that_you_must_be_approved_for
+  def some_special_action_that_you_must_be_admin_for
   end
 
   ...
