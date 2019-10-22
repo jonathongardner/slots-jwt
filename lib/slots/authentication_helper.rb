@@ -11,15 +11,18 @@ module Slots
     end
 
     def jw_token
-      return @_jw_token if @_jw_token&.valid!
-      @_jw_token = Slots::Slokens.decode(authenticate_with_http_token { |t, _| t })
-      @_jw_token.valid!
+      return @_jw_token if instance_variable_defined?(:@_jw_token)
+      token = authenticate_with_http_token { |t, _| t }
+      @_jw_token = token ? Slots::Slokens.decode(token) : nil
+    end
+
+    def jw_token!
+      jw_token&.valid!
     end
 
     def update_expired_session_tokens
       return false unless Slots.configuration.session_lifetime
-      @_jw_token = Slots::Slokens.decode(authenticate_with_http_token { |t, _| t })
-      return false unless @_jw_token.expired? && @_jw_token.session.present?
+      return false unless jw_token&.expired? && jw_token.session.present?
       new_session_token
     end
 
@@ -32,9 +35,7 @@ module Slots
 
     def current_user
       return @_current_user if instance_variable_defined?(:@_current_user)
-      current_user = Slots.configuration.authentication_model.from_sloken(jw_token)
-      # So if jw_token initalize current_user if expired
-      @_current_user ||= current_user
+      @_current_user = jw_token ? Slots.configuration.authentication_model.from_sloken(jw_token!) : nil
     end
     def load_user
       current_user&.valid_in_database? && current_user.allowed_new_token?
@@ -133,7 +134,7 @@ module Slots
       def _check_to_reject?(con, only, except, block)
         return false unless only == ALL || only.any? { |o| o.to_sym == con.action_name.to_sym }
         return false if except != ALL && except.any? { |e| e.to_sym == con.action_name.to_sym }
-        (con.instance_eval &block)
+        con.instance_eval(&block)
       end
 
       def _superclass_reject_token?(con)

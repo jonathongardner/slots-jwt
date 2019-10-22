@@ -116,8 +116,13 @@ class AnotherControllerTest < SlotsIntegrationTest
   #----------------another_valid_token_url success----------------
 
   #----------------another_valid_token_url im_a_teapot----------------
-  test "should return im_a_teapot for another_valid_token_url when invalid token" do
+  test "should return enhance_your_calm for another_valid_token_url when no token" do
     get another_valid_token_url
+    assert_response_enhance_your_calm
+    assert_response_error 'my_message', 'Another custom message'
+  end
+  test "should return im_a_teapot for another_valid_token_url when invalid token" do
+    get another_valid_token_url, headers: token_header('Some Invalid Token')
     assert_response_im_a_teapot
     assert_response_error 'my_message', 'Some custom message'
   end

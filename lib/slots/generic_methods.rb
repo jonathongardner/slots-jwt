@@ -37,14 +37,14 @@ module Slots
         (@_reject_new_token ||= []).push(block)
       end
       def _reject_new_token?(user)
-        (@_reject_new_token ||= []).any? { |b| user.instance_eval &b }
+        (@_reject_new_token ||= []).any? { |b| user.instance_eval(&b) }
       end
 
       def token_created_callback(&block)
         (@_token_created_callback ||= []).push(block)
       end
       def _token_created_callback(user)
-        (@_token_created_callback ||= []).each { |b| user.instance_eval &b }
+        (@_token_created_callback ||= []).each { |b| user.instance_eval(&b) }
       end
     end
   end
