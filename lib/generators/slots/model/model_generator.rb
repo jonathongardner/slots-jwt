@@ -15,7 +15,7 @@ module Slots
         file = 'config/initializers/slots.rb'
         config = /\n.+config\.authentication_model = .+/
         gsub_file(file, config, "", verbose: false)
-        inject_into_file(file, after: /Slots.configure do .+\n/) do
+        inject_into_file(file, after: /Slots::JWT.configure do .+\n/) do
           "  config.authentication_model = '#{name.classify}'\n"
         end
       end

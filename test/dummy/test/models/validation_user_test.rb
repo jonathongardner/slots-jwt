@@ -8,7 +8,7 @@ class ValidationUserTest < SlotsTest
     assert_error_message "can't be blank", new_user, :email
     assert_number_of_errors 1, new_user
 
-    Slots.configure do |config|
+    Slots::JWT.configure do |config|
       config.logins = {email: /@/, username: //} # Most inclusive should be last
     end
     assert_not new_user.save, 'saved new user without login'
@@ -25,7 +25,7 @@ class ValidationUserTest < SlotsTest
     assert_error_message "has already been taken", new_user, :email
     assert_number_of_errors 1, new_user
 
-    Slots.configure do |config|
+    Slots::JWT.configure do |config|
       config.logins = {email: /@/, username: //} # Most inclusive should be last
     end
     assert_not new_user.save, 'saved new user without unique login'
@@ -34,7 +34,7 @@ class ValidationUserTest < SlotsTest
   end
 
   test "should not create generic user with logins not matching login regex part one" do
-    Slots.configure do |config|
+    Slots::JWT.configure do |config|
       config.logins = {email: /@/, username: //} # Most inclusive should be last
     end
     new_user = ValidationUser.new(email: 'notAnEmail', username: 'somethingThatLooksLikeAnEmail@somowhere')
@@ -44,7 +44,7 @@ class ValidationUserTest < SlotsTest
     assert_error_message "matched email login criteria", new_user, :username
     assert_number_of_errors 2, new_user
 
-    Slots.configure do |config|
+    Slots::JWT.configure do |config|
       config.login_regex_validations = false
     end
 
@@ -52,7 +52,7 @@ class ValidationUserTest < SlotsTest
   end
 
   test "should not create generic user with logins not matching login regex part two" do
-    Slots.configure do |config|
+    Slots::JWT.configure do |config|
       config.logins = {username: /\A[A-Za-z0-9_\-]+\Z/, email: //} # Most inclusive should be last
     end
     new_user = ValidationUser.new(email: 'notAnEmail', username: 'somethingThatLooksLikeAnEmail@somowhere')

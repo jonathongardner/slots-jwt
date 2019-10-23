@@ -21,6 +21,7 @@ end
 
 # Load fixtures from the engine
 if ActiveSupport::TestCase.respond_to?(:fixture_path=)
+  ActiveSupport::TestCase.set_fixture_class(slots_jwt_sessions: Slots::JWT::Session)
   ActiveSupport::TestCase.fixture_path = File.expand_path("../test/dummy/test/fixtures", __dir__)
   ActionDispatch::IntegrationTest.fixture_path = ActiveSupport::TestCase.fixture_path
   ActiveSupport::TestCase.file_fixture_path = ActiveSupport::TestCase.fixture_path + "/files"

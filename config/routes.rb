@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-user_model = Slots.configuration.authentication_model&.name&.underscore || ""
-Slots::Engine.routes.draw do
+user_model = Slots::JWT.configuration.authentication_model&.name&.underscore || ""
+Slots::JWT::Engine.routes.draw do
   get 'sign_in', to: 'sessions#sign_in'
   post 'sign_in', to: 'sessions#sign_in'
   delete 'sign_out', to: 'sessions#sign_out'

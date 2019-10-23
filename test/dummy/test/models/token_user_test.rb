@@ -7,14 +7,14 @@ class TokenUserTest < SlotsTest
     assert_singleton_method user, :run_token_created_callback do
       assert_equal TokenUser.jwt_identifier_column, :email, 'JWT identifier column should be first identifier in login'
       assert_equal user.email, user.jwt_identifier, 'JWT identifier should be value of first identifier in login'
-      assert_no_difference('Slots::Session.count') do
+      assert_no_difference('Slots::JWT::Session.count') do
         assert_decode_token user.create_token(false), user: user
       end
     end
   end
 
   test "should create valid token with first identifier from login" do
-    Slots.configure do |config|
+    Slots::JWT.configure do |config|
       config.logins = {username: /\A[A-Za-z0-9_\-]+\Z/, email: //} # Most inclusive should be last
     end
     user = token_users(:some_great_token_user)

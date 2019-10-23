@@ -2,7 +2,7 @@
 
 require 'slots_integration_test'
 class ADifferentControllerTest < SlotsIntegrationTest
-  include Slots::Tests
+  include Slots::JWT::Tests
 
   test "should return success for a_different_valid_user_url when valid token and another_great_user" do
     user = users(:another_great_user)

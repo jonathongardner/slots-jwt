@@ -10,7 +10,7 @@ module Slots
     end
 
     def add_route
-      route "mount Slots::Engine => '/auth'"
+      route "mount Slots::JWT::Engine => '/auth'"
     end
   end
 end

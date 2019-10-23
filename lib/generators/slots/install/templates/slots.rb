@@ -1,4 +1,4 @@
-Slots.configure do |config|
+Slots::JWT.configure do |config|
   # config.logins = :email || {email: /@/, username: //}
   # config.login_regex_validations = true
   # config.authentication_model = 'User'

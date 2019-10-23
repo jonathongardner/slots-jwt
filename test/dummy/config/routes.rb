@@ -14,5 +14,5 @@ Rails.application.routes.draw do
   get 'ignore/action_one'
   get 'ignore/action_two'
 
-  mount Slots::Engine => "/slots"
+  mount Slots::JWT::Engine => "/slots"
 end

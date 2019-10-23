@@ -14,6 +14,7 @@ gemspec
 # your gem to rubygems.org.
 
 # To use a debugger
+gem "sprockets", '~> 3.7.2'
 gem "byebug", group: [:development, :test]
 gem "rubocop", require: false
 gem "rubocop-rails_config"

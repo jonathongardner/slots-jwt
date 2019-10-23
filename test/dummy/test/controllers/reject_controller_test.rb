@@ -2,7 +2,7 @@
 
 require 'slots_integration_test.rb'
 class RejectControllerTest < SlotsIntegrationTest
-  include Slots::Tests
+  include Slots::JWT::Tests
 
   test "should return enhance_your_calm for reject_action_one_url" do
     # Check that only works

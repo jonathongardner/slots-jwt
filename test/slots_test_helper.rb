@@ -4,13 +4,13 @@ require 'test_helper'
 module SlotsTestHelper
   def setup
     ENV['SLOT_SECRET'] = 'my$ecr3t'
-    Slots.configuration = nil # Reset to default configuration
-    File.delete(Slots.secret_yaml_file) if File.exist?(Slots.secret_yaml_file)
+    Slots::JWT.configuration = nil # Reset to default configuration
+    File.delete(Slots::JWT.secret_yaml_file) if File.exist?(Slots::JWT.secret_yaml_file)
   end
   def teardown
     ENV['SLOT_SECRET'] = 'my$ecr3t'
-    Slots.configuration = nil # Reset to default configuration
-    File.delete(Slots.secret_yaml_file) if File.exist?(Slots.secret_yaml_file)
+    Slots::JWT.configuration = nil # Reset to default configuration
+    File.delete(Slots::JWT.secret_yaml_file) if File.exist?(Slots::JWT.secret_yaml_file)
   end
   def error_raised_with_messege(error, error_message)
     begin
@@ -38,29 +38,29 @@ module SlotsTestHelper
 
 
   def create_token(secret = 'my$ecr3t', **payload)
-    JWT.encode payload, secret, 'HS256'
+    ::JWT.encode payload, secret, 'HS256'
   end
   def assert_valid_sloken(token, secret: 'my$ecr3t')
-    assert_singleton_method(Slots.configuration, :secret, to_return: secret) do
-      assert Slots::Slokens.decode(token), 'Should decode sloken'
+    assert_singleton_method(Slots::JWT.configuration, :secret, to_return: secret) do
+      assert Slots::JWT::Slokens.decode(token), 'Should decode sloken'
     end
   end
   def assert_decode_token(token, secret: 'my$ecr3t', user: nil, exp: nil, iat: nil, session: nil, extra_payload: nil)
     begin
-      payload_array = JWT.decode token, secret, true, verify_iat: true, algorithm: 'HS256'
+      payload_array = ::JWT.decode token, secret, true, verify_iat: true, algorithm: 'HS256'
       payload = payload_array[0]
       assert_equal user.as_json.except('created_at', 'updated_at'), payload['user'].except('created_at', 'updated_at'), 'User should be equal to encoded user' if user
       assert_equal exp, payload['exp'], 'exp should be equal to encoded exp' if exp
       assert_equal iat, payload['iat'], 'iat should be equal to encoded iat' if iat
       assert_equal session, payload['session'], 'iat should be equal to encoded session' if session
       assert_equal extra_payload, payload['extra_payload'], 'extra_payload should be equal to encoded extra_payload' if extra_payload
-    rescue JWT::ExpiredSignature
+    rescue ::JWT::ExpiredSignature
       assert false, 'Token should not be expired'
-    rescue JWT::InvalidIatError
+    rescue ::JWT::InvalidIatError
       assert false, 'Token should not have invalid iat'
-    rescue JWT::VerificationError
+    rescue ::JWT::VerificationError
       assert false, 'Token should not have verification error'
-    rescue JWT::DecodeError
+    rescue ::JWT::DecodeError
       assert false, 'Token should not have decoding error'
     end
   end
@@ -93,6 +93,6 @@ module SlotsTestHelper
   end
 
   def copy_to_config(file)
-    FileUtils.cp(file, Slots.secret_yaml_file)
+    FileUtils.cp(file, Slots::JWT.secret_yaml_file)
   end
 end

@@ -6,19 +6,19 @@ class UserTest < SlotsTest
 
   test "should create valid token with session" do
     user = users(:another_great_user)
-    assert_difference('Slots::Session.count') do
+    assert_difference('Slots::JWT::Session.count') do
       token = user.create_token(true)
       assert_decode_token token, user: user, extra_payload: {}, session: user.sessions.second.session
     end
   end
 
   test "should not create token with session if session_lifetime is nil" do
-    Slots.configure do |config|
+    Slots::JWT.configure do |config|
       config.session_lifetime = nil
     end
 
     user = users(:another_great_user)
-    assert_no_difference('Slots::Session.count') do
+    assert_no_difference('Slots::JWT::Session.count') do
       token = user.create_token(true)
       assert_decode_token token, user: user, extra_payload: {}
     end
@@ -59,10 +59,10 @@ class UserTest < SlotsTest
   def add_old_jws_to_user(user: :some_great_user, session: nil)
     exp = 2.minute.from_now.to_i
     u = users(user)
-    s = session ? slots_sessions(session) : nil
+    s = session ? slots_jwt_sessions(session) : nil
     iat = s&.jwt_iat || 2.minute.ago.to_i
     token = create_token(user: u.as_json, exp: exp, iat: iat, extra_payload: {}, session: s&.session || '')
-    jws = Slots::Slokens.decode(token)
+    jws = Slots::JWT::Slokens.decode(token)
     return u.set_token!(jws), exp, iat
   end
   #-----------------------TOKEN------------------------

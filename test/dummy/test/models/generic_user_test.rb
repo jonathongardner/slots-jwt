@@ -11,7 +11,7 @@ class GenericUserTest < SlotsTest
   end
 
   test "should find_for_authentication user using config" do
-    Slots.configure do |config|
+    Slots::JWT.configure do |config|
       config.logins = {email: /@/, username: //} # Most inclusive should be last
     end
     great_user = generic_users(:some_great_generic_user)
@@ -75,7 +75,7 @@ class GenericUserTest < SlotsTest
     end
 
     assert_singleton_method(great_user, :authenticate?, to_return: false, count: 1) do
-      assert_raises(Slots::AuthenticationFailed) do
+      assert_raises(Slots::JWT::AuthenticationFailed) do
         great_user.authenticate!(GenericUser.pass)
       end
     end

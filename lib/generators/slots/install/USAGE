@@ -10,4 +10,4 @@ Example:
 
     This will add:
       TO: config/routes.rb
-        mount Slots::Engine => "/slots"
+        mount Slots::JWT::Engine => "/slots"

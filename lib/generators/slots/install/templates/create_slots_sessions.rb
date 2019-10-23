@@ -1,6 +1,6 @@
 class CreateSlotsSessions < ActiveRecord::Migration[5.2]
   def change
-    create_table :slots_sessions do |t|
+    create_table :slots_jwt_sessions do |t|
       t.string :session, length: 128
       t.bigint :jwt_iat
       t.bigint :previous_jwt_iat
@@ -8,6 +8,6 @@ class CreateSlotsSessions < ActiveRecord::Migration[5.2]
 
       t.timestamps
     end
-    add_index :slots_sessions, :session, unique: true
+    add_index :slots_jwt_sessions, :session, unique: true
   end
 end

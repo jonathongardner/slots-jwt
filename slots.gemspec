@@ -3,15 +3,15 @@
 $:.push File.expand_path("lib", __dir__)
 
 # Maintain your gem's version:
-require "slots/version"
+require "slots/jwt/version"
 
 # Describe your gem and declare its dependencies:
 Gem::Specification.new do |s|
   s.name        = "slots-jwt"
-  s.version     = Slots::VERSION
+  s.version     = Slots::JWT::VERSION
   s.authors     = ["Jonathon Gardner"]
   s.email       = ["TheAppGardner@gmail.com"]
-  s.homepage    = "https://github.com/jonathongardner/slots"
+  s.homepage    = "https://github.com/jonathongardner/slots-jwt"
   s.summary     = "Token Authentication for Rails using JWT."
   s.description = "Token Authentication for Rails using JWT. Slots is designed to keep JWT stateless"\
     " and minimize database calls. This is done by storing (none sensitive) data in the JWT and populating current_user" \

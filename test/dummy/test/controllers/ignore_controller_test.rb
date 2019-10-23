@@ -2,7 +2,7 @@
 
 require 'slots_integration_test'
 class IgnoreControllerTest < SlotsIntegrationTest
-  include Slots::Tests
+  include Slots::JWT::Tests
 
   test "should return success for some_great_user for ignore_action_one_url" do
     # Check that only works

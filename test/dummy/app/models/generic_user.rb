@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class GenericUser < ApplicationRecord
-  include Slots::GenericMethods
+  include Slots::JWT::GenericMethods
 
   reject_new_token do
     username == 'badUsername@thisdontwork'

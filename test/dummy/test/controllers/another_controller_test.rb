@@ -2,7 +2,7 @@
 
 require 'slots_integration_test'
 class AnotherControllerTest < SlotsIntegrationTest
-  include Slots::Tests
+  include Slots::JWT::Tests
 
   #----------------another_valid_user success----------------
   test "should return success for another_valid_user_url when valid token and user" do
@@ -26,7 +26,7 @@ class AnotherControllerTest < SlotsIntegrationTest
     assert_no_new_token
   end
   test "should return success for expired token with valid session and iat matching previous iat older than configuration time" do
-    Slots.configure do |config|
+    Slots::JWT.configure do |config|
       config.previous_jwt_lifetime = 3.minutes
     end
     _, _, token = user_previous_session_expired_token
@@ -65,7 +65,7 @@ class AnotherControllerTest < SlotsIntegrationTest
   end
   test "should return im_a_teapot for expired token with valid session but iat is different" do
     user = users(:some_great_user)
-    session = slots_sessions(:a_great_session)
+    session = slots_jwt_sessions(:a_great_session)
     token = create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: session.jwt_iat - 45, session: session.session, extra_payload: {})
     # Dont use authorized so can pass session
     get another_valid_user_url, headers: token_header(token)
@@ -158,7 +158,7 @@ class AnotherControllerTest < SlotsIntegrationTest
 
   #----------------another_valid_token_with_update_expired_url im_a_teapot----------------
   test "should return im_a_teapot for another_valid_token_with_update_expired_url when expired valid token and invalid user" do
-    session = slots_sessions(:a_great_session)
+    session = slots_jwt_sessions(:a_great_session)
     get another_valid_token_with_update_expired_url, headers: invalid_token(exp: 1.minute.ago.to_i, iat: session.jwt_iat, session: session.session)
     assert_response_im_a_teapot
     assert_no_new_token
@@ -187,14 +187,14 @@ class AnotherControllerTest < SlotsIntegrationTest
   def user_session_expired_token(sym = [:some_great_user, :a_great_session])
     # TODO WHY am I passing an array???
     user = users(sym[0])
-    session = slots_sessions(sym[1])
+    session = slots_jwt_sessions(sym[1])
     token = create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: session.jwt_iat, session: session.session, extra_payload: {})
     return user, session, token
   end
 
   def user_previous_session_expired_token(sym = [:some_great_user, :a_great_session])
     user = users(sym[0])
-    session = slots_sessions(sym[1])
+    session = slots_jwt_sessions(sym[1])
     token = create_token(user: user.as_json, exp: 1.minute.ago.to_i, iat: session.previous_jwt_iat, session: session.session, extra_payload: {})
     return user, session, token
   end

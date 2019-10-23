@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class TokenUser < ApplicationRecord
-  include Slots::GenericMethods, Slots::Tokens
+  include Slots::JWT::GenericMethods, Slots::JWT::Tokens
 
   def authenticate(password)
     password == self.class.pass ? self : false

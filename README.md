@@ -5,7 +5,7 @@ Token authentication solution for rails 5 API. Slots use JSON Web Tokens for aut
 Slots 0.0.4 works with Rails 5. Add this line to your application's Gemfile:
 
 ```ruby
-gem 'slots'
+gem 'slots-jwt'
 ```
 Then run `bundle install`.
 
@@ -15,7 +15,7 @@ $ rails generate slots:install
 ```
 This will create `config/initializers/slots.rb` and add the following line to `config/routes.rb`
 ```ruby
-mount Slots::Engine => "/auth"
+mount Slots::JWT::Engine => "/auth"
 ```
 This will mount all slot routes to `auth/*`.
 
@@ -26,7 +26,7 @@ $ rails generate slots:model User
 Any rails accepted name can be used for the model but `User` is the expected default. If a different name is used for the authentication model than it must be defined in the config file for slots (this will automatically be done if the `generate slots` is used).
 config/initializers/slots.rb
 ```ruby
-Slots.configure do |config|
+Slots::JWT.configure do |config|
   ...
   config.authentication_model = 'AnotherModel'
   ...
@@ -134,7 +134,7 @@ If sessions are allowed (`session_lifetime` is not nil) `session: true` can be p
 
 ## Testing
 
-By adding `include Slots::Tests` the following methods can be used within minitest, `authorized_get`, `authorized_post`, `authorized_put`, `authorized_patch` and `authorized_delete`. These methods are the same as the usual `get`, ... `delete` but the first param in the method must be the user. For example:
+By adding `include Slots::JWT::Tests` the following methods can be used within minitest, `authorized_get`, `authorized_post`, `authorized_put`, `authorized_patch` and `authorized_delete`. These methods are the same as the usual `get`, ... `delete` but the first param in the method must be the user. For example:
 ```ruby
 authorized_get users(:some_user), some_route_url, params: {one: 'something', ...}, headers: {'info' => 'someInfo', ...}
 ```
@@ -142,7 +142,7 @@ authorized_get users(:some_user), some_route_url, params: {one: 'something', ...
 ## Configurations
 Default configuration:
 ```ruby
-Slots.configure do |config|
+Slots::JWT.configure do |config|
   config.logins = :email
   config.login_regex_validations = true
   config.authentication_model = 'User'
@@ -180,7 +180,7 @@ The order should be newer to older secrets. This file can be created/updated man
 
 ## Routes
 
-All these routes will be mounted at the route used above in `mount Slots::Engine =>`.
+All these routes will be mounted at the route used above in `mount Slots::JWT::Engine =>`.
 
 | Route Helper | Route | Token |     |
 | ------------ | ----- | ----- | --- |
@@ -205,6 +205,9 @@ Some of the problems with JWS:
 | Set short expiration and have a refresher/session token | When user signs out tokens are still valid for X time (which should be short). If the user info is changed (like a user is deactivated) the token is still valid until it expires. If a token with a session is compromised it can be revoked by removing that session (or all sessions if needed). |
 
 The last solution I feel is the best because for most API calls (within the expiration time) the token remains stateless. The downsides can be negligible by setting the expiration time to something small (less than an hour). .
+
+### Why the name???
+Last but not least the most important question of them all... why slots??? or better yet slots-jwt??? well I'll start with the first, a slot machine takes tokens... yep that's it, all other authentication names had been taken so this is it. So why slots-jwt? Well hopefully it helps clarify a little what it does but most of all rubygems wouldn't let me name it slots because it was to close to another name..?..? so I added `-jwt`. 
 
 
 ## Contributing

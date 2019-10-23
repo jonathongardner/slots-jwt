@@ -7,7 +7,7 @@ class SlotsJwtTest < SlotsTest
     exp = 1.minute.from_now.to_i
     iat = 1.minute.ago.to_i
 
-    jws = Slots::Slokens.decode(create_token(exp: exp, iat: iat, extra_payload: {}, user: user, session: ''))
+    jws = Slots::JWT::Slokens.decode(create_token(exp: exp, iat: iat, extra_payload: {}, user: user, session: ''))
 
     assert jws.valid?, 'Token should be valid'
     assert_equal user, jws.authentication_model_values, 'Identifer should be equal to encoded identifier'
@@ -20,8 +20,8 @@ class SlotsJwtTest < SlotsTest
     exp = 1.minute.from_now.to_i
     iat = 1.minute.ago.to_i
 
-    assert_singleton_method(Slots.configuration, :secret, to_return: new_secret) do
-      jws = Slots::Slokens.decode(create_token(new_secret, exp: exp, iat: iat, extra_payload: {}, user: user, session: ''))
+    assert_singleton_method(Slots::JWT.configuration, :secret, to_return: new_secret) do
+      jws = Slots::JWT::Slokens.decode(create_token(new_secret, exp: exp, iat: iat, extra_payload: {}, user: user, session: ''))
 
       assert jws.valid?, 'Token should be valid'
       assert_equal user, jws.authentication_model_values, 'Identifer should be equal to encoded identifier'
@@ -32,7 +32,7 @@ class SlotsJwtTest < SlotsTest
   test "should encode valid token" do
     user = {'id' => 'SomeIdentifier'}
     extra_payload = {'something_else' => 47}
-    jws = Slots::Slokens.encode(user, extra_payload)
+    jws = Slots::JWT::Slokens.encode(user, extra_payload)
     assert_decode_token jws.token, user: user, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload
   end
   test "should encode using config secret" do
@@ -40,8 +40,8 @@ class SlotsJwtTest < SlotsTest
     user = {'id' => 'SomeIdentifier'}
     extra_payload = {'something_else' => 47}
 
-    assert_singleton_method(Slots.configuration, :secret, to_return: new_secret) do
-      jws = Slots::Slokens.encode(user, extra_payload)
+    assert_singleton_method(Slots::JWT.configuration, :secret, to_return: new_secret) do
+      jws = Slots::JWT::Slokens.encode(user, extra_payload)
       assert_decode_token jws.token, user: user, exp: jws.exp, iat: jws.iat, extra_payload: extra_payload, secret: new_secret
     end
   end
@@ -50,14 +50,14 @@ class SlotsJwtTest < SlotsTest
     hash = {session: '', exp: 1.minute.from_now.to_i, user: {}}
     old_iat = 1553294000
     old_token = create_token(iat: old_iat, **hash)
-    assert_singleton_method(Slots.configuration, :secret, to_return: 'my$ecr3t', with: old_iat) do
-      Slots::Slokens.decode(old_token)
+    assert_singleton_method(Slots::JWT.configuration, :secret, to_return: 'my$ecr3t', with: old_iat) do
+      Slots::JWT::Slokens.decode(old_token)
     end
 
     new_iat = 1553295000
     new_token = create_token(iat: new_iat, **hash)
-    assert_singleton_method(Slots.configuration, :secret, to_return: 'my$ecr3t', with: new_iat) do
-      Slots::Slokens.decode(new_token)
+    assert_singleton_method(Slots::JWT.configuration, :secret, to_return: 'my$ecr3t', with: new_iat) do
+      Slots::JWT::Slokens.decode(new_token)
     end
   end
 
@@ -65,7 +65,7 @@ class SlotsJwtTest < SlotsTest
     jws, _, _ = creat_valid_jws
 
     assert_singleton_method(jws, :valid?, to_return: false) do
-      error_raised_with_messege(Slots::InvalidToken, "Invalid Token") do
+      error_raised_with_messege(Slots::JWT::InvalidToken, "Invalid Token") do
         jws.valid!
       end
     end
@@ -76,9 +76,9 @@ class SlotsJwtTest < SlotsTest
   end
 
   test "should not decode token" do
-    refute Slots::Slokens.decode('FakeToken').valid?, 'Should return false for token not formatted correctly'
-    refute Slots::Slokens.decode("FakeToken.#{Base64.encode64('{]')}.cool").valid?, 'Should return false for json not valid'
-    refute Slots::Slokens.decode("FakeToken.#{Base64.encode64('[]')}.cool").valid?, 'Should return false for none hash'
+    refute Slots::JWT::Slokens.decode('FakeToken').valid?, 'Should return false for token not formatted correctly'
+    refute Slots::JWT::Slokens.decode("FakeToken.#{Base64.encode64('{]')}.cool").valid?, 'Should return false for json not valid'
+    refute Slots::JWT::Slokens.decode("FakeToken.#{Base64.encode64('[]')}.cool").valid?, 'Should return false for none hash'
 
     refute create_jws(valid_hash(iat: '')).valid?, 'Should return false for bad iat'
     refute create_jws(valid_hash.except(:iat)).valid?, 'Should return false for missing iat'
@@ -115,7 +115,7 @@ class SlotsJwtTest < SlotsTest
   end
 
   def create_jws(hash)
-    Slots::Slokens.decode(create_token(**hash))
+    Slots::JWT::Slokens.decode(create_token(**hash))
   end
 
   def valid_hash(**hash)

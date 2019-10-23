@@ -1,25 +1,36 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 a_great_session:
+  id: <%= ActiveRecord::FixtureSet.identify(:a_great_session) %>
   session: ThisIsMySession
   jwt_iat: <%= 2.minutes.ago.to_i %>
   previous_jwt_iat: <%= 3.minutes.ago.to_i %>
   user: some_great_user
+  updated_at: <%= 1.second.ago %>
+  created_at: <%= 1.second.ago %>
 
 an_expired_session:
+  id: <%= ActiveRecord::FixtureSet.identify(:an_expired_session) %>
   session: ThisIsMyExpiredSession
   jwt_iat: <%= 3.weeks.ago.to_i %>
   user: some_great_user
+  user_id: <%= ActiveRecord::FixtureSet.identify(:some_great_user) %>
   updated_at: <%= 3.weeks.ago %>
   created_at: <%= 4.weeks.ago %>
 
 another_great_session:
+  id: <%= ActiveRecord::FixtureSet.identify(:another_great_session) %>
   session: ThisIsMyOtherSession
   jwt_iat: <%= 2.minutes.ago.to_i %>
   previous_jwt_iat: <%= 3.minutes.ago.to_i %>
   user: another_great_user
+  updated_at: <%= 1.second.ago %>
+  created_at: <%= 1.second.ago %>
 
 weird_session:
+  id: <%= ActiveRecord::FixtureSet.identify(:weird_session) %>
   session: ThisIsMyWeirdSession
   jwt_iat: <%= 2.minutes.ago.to_i %>
   user: weird_user
+  updated_at: <%= 1.second.ago %>
+  created_at: <%= 1.second.ago %>
