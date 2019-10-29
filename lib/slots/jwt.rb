@@ -10,6 +10,8 @@ require "slots/jwt/slokens"
 require "slots/jwt/tests"
 require "slots/jwt/tokens"
 require "slots/jwt/authentication_helper"
+require "slots/jwt/permission_filter"
+require "slots/jwt/type_helper"
 
 module Slots
   module JWT

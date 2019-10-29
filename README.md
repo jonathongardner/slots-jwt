@@ -1,6 +1,20 @@
 # Slots
 Token authentication solution for rails 5 API. Slots use JSON Web Tokens for authentication and database session for remembering signed in users.
 
+## Table of Contents
+
+- [Getting started](#getting-started)
+- [Secrets](#secrets)
+- [Usage](#usage)
+- [Authorization](#authorization)
+- [Sessions](#sessions)
+- [Using with GraphQL](#graphql)
+- [Testing](#testing)
+- [Configurations](#configurations)
+- [Routes](#routes)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Getting started
 Slots 0.0.4 works with Rails 5. Add this line to your application's Gemfile:
 
@@ -48,6 +62,9 @@ Tokens are expected to be in the header of the request in the following format:
 'authorization' => 'Bearer token=TOKEN'
 ```
 They are also returned in the header in the same way.
+
+## Secret
+To sign JSON web tokens, a (secret) key is needed. By default Slots will look in the `ENV['SLOT_SECRET']`. This can be changed in the slots config file.
 
 ## Usage
 To require a user to be authenticated the following methods can be used in the controller.
@@ -132,6 +149,102 @@ If sessions are allowed (`session_lifetime` is not nil) `session: true` can be p
   1. The first is by sending the token to `MOUNT_LOCATION/update_session_token`. This method will always return a new token even if the token has not expired. This will return the same information as `sign_in` (user information and with the token in the header).
   2. The second is by adding `update_expired_session_tokens!` (which takes the usual options of a `before_action` `only`, `except`, etc). This method will allow any route to take a valid expired token and it will return a new token in the headers with usual route information in the body. A token will only be returned in the header if the token passed is expired. When using this method a problem can arise were two request are made at the same time with the same expired token. The first request processed would return a new token but the second request would fail because the expired token does not match the information of the session anymore (since it was just updated) and would therefore return unauthorized. To fix this there is a previous jwt lifetime (which defaults to 5 seconds and can be changed in the config). This will allow the previous token to be valid for 5 seconds (or whatever is set in config). If a previous token is sent that is within the previous lifetime it will be a valid token but it will not return a new token (since one was already returned in the earlier request).
 
+## GraphQL
+Using graphql-ruby??? Slots has helper modules and classes! It uses the following two feature of graphql-ruby to help with authorization/authentication, [extension](https://github.com/rmosolgo/graphql-ruby/blob/master/guides/type_definitions/extensions.md) and [limiting visibility](https://github.com/rmosolgo/graphql-ruby/blob/master/guides/schema/limiting_visibility.md). An example can be seen in [graph_test](https://github.com/jonathongardner/graph_test).
+### Authorizing fields
+```ruby
+class Types
+  AuthorizedField < GraphQL::Schema::Field
+    include Slots::JWT::TypeHelper
+  end
+end
+```
+
+```ruby
+module Types
+  class BaseObject < GraphQL::Schema::Object
+    field_class AuthorizedField
+  end
+end
+```
+
+```ruby
+module Types
+  class QueryType < Types::BaseObject
+    ...
+
+    field :authorized_field, [Types::AuthorizedFieldType], null: false, description: "An authorized field", required_permission: :admin
+    def authorized_field
+      ...
+    end
+  end
+end
+```
+
+### Authorizing Types
+
+```ruby
+module Types
+  class BaseObject < GraphQL::Schema::Object
+    # field_class AuthorizedField # can be used together
+    extend Slots::JWT::TypeHelper
+    # required_permission(:default_type)
+  end
+end
+```
+
+```ruby
+module Types
+  class AuthorizedType < Types::BaseObject
+    required_permission(:admin)
+    ...
+
+    field :field, String, null: false, description: "A string on an authorized field"
+    def field
+      ...
+    end
+  end
+end
+```
+
+### Filter
+Filter must be used with at least one of the above.
+```ruby
+class PermissionFilter < Slots::JWT::PermissionFilter
+  def allowed?
+    # available methods schema_member, current_user, required_permission, valid_loaded_user
+    return true if required_permission == :anyone
+    # loaded user gets it from the DB to help ensure user info is current
+    return valid_loaded_user if required_permission == :loaded_user
+
+    return is_admin if required_permission == :admin
+    # default to a valid user
+    current_user.present?
+  end
+
+  def is_admin
+    valid_loaded_user && current_user.admin
+  end
+end
+```
+
+```ruby
+class GraphqlController < ApplicationController
+  def execute
+    ...
+    context = {
+      current_user: current_user,# can be nil if current_user bad token or no token
+    }
+    filter = PermissionFilter.new(current_user)
+    result = GraphTestSchema.execute(query, only: filter, variables: variables, context: context, operation_name: operation_name)
+    ...
+  end
+  ...
+end
+
+```
+
+
 ## Testing
 
 By adding `include Slots::JWT::Tests` the following methods can be used within minitest, `authorized_get`, `authorized_post`, `authorized_put`, `authorized_patch` and `authorized_delete`. These methods are the same as the usual `get`, ... `delete` but the first param in the method must be the user. For example:
@@ -207,8 +320,7 @@ Some of the problems with JWS:
 The last solution I feel is the best because for most API calls (within the expiration time) the token remains stateless. The downsides can be negligible by setting the expiration time to something small (less than an hour). .
 
 ### Why the name???
-Last but not least the most important question of them all... why slots??? or better yet slots-jwt??? well I'll start with the first, a slot machine takes tokens... yep that's it, all other authentication names had been taken so this is it. So why slots-jwt? Well hopefully it helps clarify a little what it does but most of all rubygems wouldn't let me name it slots because it was to close to another name..?..? so I added `-jwt`. 
-
+Last but not least the most important question of them all... why slots??? or better yet slots-jwt??? well I'll start with the first, a slot machine takes tokens... yep that's it, all other authentication names had been taken so this is it. So why slots-jwt? Well hopefully it helps clarify a little what it does but most of all rubygems wouldn't let me name it slots because it was to close to another name..?..? so I added `-jwt`.
 
 ## Contributing
 
