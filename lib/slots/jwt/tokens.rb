@@ -43,6 +43,7 @@ module Slots
       end
       def set_token!(slots_jwt)
         @slots_jwt = slots_jwt
+        @extra_payload = slots_jwt.extra_payload
         self
       end
 
