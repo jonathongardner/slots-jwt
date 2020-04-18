@@ -5,6 +5,7 @@ class CreateUsers < ActiveRecord::Migration[5.2]
     create_table :users do |t|
       t.string :email, index: true, unique: true
       t.string :username, index: true, unqiue: true
+      t.integer :failed_attempts, default: 0
 
       # database_authentication
       t.string :password_digest

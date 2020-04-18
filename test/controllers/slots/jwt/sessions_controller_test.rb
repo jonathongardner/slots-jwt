@@ -53,10 +53,35 @@ module Slots
       #-----Add on logins------------
       test "should not sign_in with weird user" do
         user = users(:weird_user)
+        user.update_columns(failed_attempts: 5)
         get sign_in_url params: {login: user.email, password: User.pass}
         assert_response :unauthorized
-
         assert_response_error 'authentication', 'login or password is invalid'
+
+        user.reload
+        assert_equal 5, user.failed_attempts, 'Should not reset failed attampts'
+      end
+      test "should change failed attempts" do
+        get sign_in_url params: {login: 'someEmailthaDoesntExist@somwhere.com', password: 'bad_password'}
+        assert_response :unauthorized
+
+        user = users(:some_great_user)
+
+
+        get sign_in_url params: {login: user.email, password: 'bad_password'}
+        assert_response :unauthorized
+        user.reload
+        assert_equal 1, user.failed_attempts, 'Should not reset failed attampts'
+
+        get sign_in_url params: {login: user.email, password: 'bad_password'}
+        assert_response :unauthorized
+        user.reload
+        assert_equal 2, user.failed_attempts, 'Should not reset failed attampts'
+
+        get sign_in_url params: {login: user.email, password: User.pass}
+        assert_response :success
+        user.reload
+        assert_equal 0, user.failed_attempts, 'Should reset failed attampts'
       end
       #-----Add on logins------------
 

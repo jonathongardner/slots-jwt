@@ -12,6 +12,7 @@ Token authentication solution for rails 5 API. Slots use JSON Web Tokens for aut
 - [Testing](#testing)
 - [Configurations](#configurations)
 - [Routes](#routes)
+- [Login Hooks](#login-hooks)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -104,10 +105,11 @@ ignore_login!
 ```
 This takes all the same options as `require_login!`.
 
+### Reject new tokens
 To not allow a user to sign in the following can be used in the authentication model:
 ```ruby
 class User < ApplicationRecord
-  slots :database_authentication
+  ...
 
   reject_new_token do
     !self.approved # Return true if they cannot get a new token
@@ -115,6 +117,29 @@ class User < ApplicationRecord
 end
 ```
 This will not allow unapproved users to get a new token (login or update_session_token).
+
+### Login Hooks
+To run certain methods on failed/successful logins there are hooks:
+```ruby
+class User < ApplicationRecord
+  ...
+
+  failed_login do
+    # This method will be called on failed logins even if they
+    # do not have valid login identifier so might need to check
+    # if its an actual user by:
+    # next if new_record?
+    some_failed_login_stuff
+  end
+
+  successful_login do
+    # Do something with
+    some_successful_login_stuff
+  end
+end
+```
+NOTE: `failed_login` will get called if `reject_new_token` is true
+
 
 ## Authorization
 Sometimes when dealing with authentication you also need authorization. While in most cases you should use another gem to handle this, if it is simple (like an admin or approved user) slots can handle it. Just add the following:
