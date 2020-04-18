@@ -27,3 +27,8 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency "sqlite3"
 end
+# To release:
+# gem build slots.gemspec
+# rm gems/slots-jwt-*-1.gem
+# mv slots-jwt-*.gem gems/
+# gem push gems/slots-jwt-*.gem
