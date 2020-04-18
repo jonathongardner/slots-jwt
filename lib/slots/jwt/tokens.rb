@@ -30,6 +30,11 @@ module Slots
         token
       end
 
+      def update_token_user_info
+        @slots_jwt.update_user_values(self)
+        @new_token = true
+      end
+
       def extra_payload
         @extra_payload || {}
       end

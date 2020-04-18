@@ -14,5 +14,8 @@ Rails.application.routes.draw do
   get 'ignore/action_one'
   get 'ignore/action_two'
 
+  get 'update_user_token_info/action_one'
+  get 'update_user_token_info/action_two'
+
   mount Slots::JWT::Engine => "/slots"
 end

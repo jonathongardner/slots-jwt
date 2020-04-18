@@ -9,6 +9,13 @@ module Slots
 
       included do
         include ActionController::HttpAuthentication::Token::ControllerMethods
+        before_action :check_to_update_token
+      end
+
+      def check_to_update_token
+        return unless self.class._update_token_user_info?(self) && current_user
+        current_user.update_token_user_info
+        set_token_header!
       end
 
       def jw_token
@@ -52,11 +59,13 @@ module Slots
         raise Slots::JWT::InvalidToken, "User doesnt exist" if @_require_load_user && !load_user
         access_denied! unless current_user && (@_ignore_callbacks || token_allowed?)
       end
+
       def require_load_user
         # Use varaible so that if this action is prepended it will still only be called when checking for valid user,
         # i.e. so its not called before update_expired_session_tokens if set
         @_require_load_user = true
       end
+
       def ignore_callbacks
         @_ignore_callbacks = true
       end
@@ -120,6 +129,26 @@ module Slots
           rescue_from Slots::JWT::AccessDenied do |exception|
             render json: response, status: status
           end
+        end
+
+        def update_token_user_info(only: ALL, except: ALL, &block)
+          raise 'Cant pass both only and except' unless only == ALL || except == ALL
+          only = Array(only) if only != ALL
+          except = Array(except) if except != ALL
+
+          (@_update_token_user_info ||= []).push([only, except, block])
+        end
+        def _update_token_user_info?(con)
+          (@_update_token_user_info ||= []).any? { |o, e, b| _check_to_update_token_user_info?(con, o, e, b) } || _superclass_update_token_user_info?(con)
+        end
+        def _check_to_update_token_user_info?(con, only, except, block)
+          return false unless only == ALL || only.any? { |o| o.to_sym == con.action_name.to_sym }
+          return false if except != ALL && except.any? { |e| e.to_sym == con.action_name.to_sym }
+          con.instance_eval(&block)
+        end
+
+        def _superclass_update_token_user_info?(con)
+          self.superclass.respond_to?('_update_token_user_info?') && self.superclass._update_token_user_info?(con)
         end
 
         def reject_token(only: ALL, except: ALL, &block)

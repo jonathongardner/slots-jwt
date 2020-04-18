@@ -48,6 +48,11 @@ module Slots
         encode
       end
 
+      def update_user_values(authentication_record)
+        @authentication_model_values = authentication_record.as_json
+        encode
+      end
+
       def update_token(authentication_record, extra_payload)
         update_exp
         update_token_data(authentication_record, extra_payload)
